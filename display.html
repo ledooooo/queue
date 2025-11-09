@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>شاشة طابور العيادات</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background: #d0e6f2; }
+    /* عدّل الارتفاع حسب شاشتك */
+    #topPanel    { height: 65vh; }
+    #videoPanel  { height: 35vh; }
+    .card        { background: #ffffff; border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,.08); }
+    .num         { font-size: 4rem; line-height: 1; color: #004156; }
+    @media (min-width:768px){ .num { font-size: 5rem; } }
+  </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+  <!-- النصف العلوي: العيادات -->
+  <section id="topPanel" class="w-full p-4 overflow-y-auto">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-center text-[#004156] mb-4">الرقم الحالي</h1>
+    <div id="cards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+  </section>
+
+  <!-- النصف السفلي: فيديو -->
+  <section id="videoPanel" class="w-full bg-black flex items-center justify-center">
+    <!-- يمكنك وضع أي فيديو تريده -->
+    <video id="vid" class="h-full w-full object-cover" autoplay muted loop>
+      <source src="vid.mp4" type="video/mp4">
+      <!-- fallback يوتيوب (اختياري) -->
+      <!-- <iframe class="w-full h-full" src="https://www.youtube.com/embed/XXXX?autoplay=1&mute=1&loop=1" frameborder="0"></iframe> -->
+    </video>
+  </section>
+
+  <script type="module">
+    import { db, ref, onValue } from "./js/firebase-config.js";
+
+    const container = document.getElementById('cards');
+
+    onValue(ref(db, 'clinics'), snap => {
+      container.innerHTML = '';
+      const data = snap.val() || {};
+      Object.keys(data).forEach(id => {
+        const {name, currentNumber} = data[id];
+        container.insertAdjacentHTML('beforeend', `
+          <div class="card p-4 flex flex-col items-center justify-center">
+            <h2 class="text-lg md:text-xl font-bold text-[#2a3e48] mb-2">${name}</h2>
+            <p class="num font-extrabold">${currentNumber}</p>
+            <span class="text-sm text-gray-500 mt-1">الرقم الحالي</span>
+          </div>`);
+      });
+    });
+  </script>
+</body>
+</html>
