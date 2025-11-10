@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>لوحة التحكم</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com "></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400 ;500;700;800&display=swap" rel="stylesheet">
   <style>body{font-family:'Tajawal',sans-serif;background:#d0e6f2}</style>
 </head>
 <body class="min-h-screen p-6">
@@ -32,64 +32,52 @@
     </div>
   </div>
 
-<script type="module">
-  import { onValue, ref, off } from "./js/firebase-config.js";
-  import { api } from "./js/api.js";
-  import { announce, speakReset } from "./js/tts.js";
-  // 1- استيراد db علشان نستخدمه فى ref
-  import { db } from "./js/firebase-config.js";
+  <script type="module">
+    import { onValue, ref } from "./js/firebase-config.js";
+    import { api } from "./js/api.js";
+    import { announce, speakReset } from "./js/tts.js";
 
-  let cid = null;
-  let unsubscribe = null;   // 2- متغير لإلغاء الاستماع السابق
+    let cid = null;
+    const sel = document.getElementById('sel'), panel = document.getElementById('panel'),
+          nameEl = document.getElementById('name'), numEl = document.getElementById('num');
 
-  const sel = document.getElementById('sel'), panel = document.getElementById('panel'),
-        nameEl = document.getElementById('name'), numEl = document.getElementById('num');
-
-  async function fillSel() {
-    sel.innerHTML = '<option value="" disabled selected>-- اختر عيادة --</option>';
-    (await api.getClinics()).forEach(c => sel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
-  }
-  fillSel();
-
-  sel.addEventListener('change', async e => {
-    // ألغِ الاستماع القديم إن وجد
-    if (unsubscribe) { off(ref(db, `clinics/${cid}/currentNumber`)); unsubscribe = null; }
-
-    cid = e.target.value;
-    const c = await api.getClinic(cid);
-    if (!c) return;
-
-    nameEl.textContent = c.name;
-    numEl.textContent = c.currentNumber;
-    panel.classList.remove('hidden');
-
-    // 3- استمع للتغييرات وحدّث الواجهة
-    unsubscribe = onValue(ref(db, `clinics/${cid}/currentNumber`), s =>
-      numEl.textContent = s.val() ?? 0);
-  });
-
-  async function fireAndAnnounce(action) {
-    if (!cid) return;
-    let clinic;
-    switch (action) {
-      case 'adv': clinic = await api.advanceNumber(cid); break;
-      case 'back': clinic = await api.goBackNumber(cid); break;
-      case 'set':
-        const v = document.getElementById('setInp').value;
-        if (v !== '') { await api.setNumber(cid, v); document.getElementById('setInp').value = ''; }
-        clinic = await api.getClinic(cid); break;
-      case 'reset':
-        await api.resetNumber(cid);
-        clinic = await api.getClinic(cid);
-        speakReset(); break;
+    async function fillSel() {
+      sel.innerHTML = '<option value="" disabled selected>-- اختر عيادة --</option>';
+      (await api.getClinics()).forEach(c => sel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`));
     }
-    if (clinic && action !== 'reset') announce(clinic.name, clinic.currentNumber);
-  }
+    fillSel();
 
-  document.getElementById('adv').addEventListener('click', () => fireAndAnnounce('adv'));
-  document.getElementById('back').addEventListener('click', () => fireAndAnnounce('back'));
-  document.getElementById('setBtn').addEventListener('click', () => fireAndAnnounce('set'));
-  document.getElementById('reset').addEventListener('click', () => fireAndAnnounce('reset'));
-</script>
+    sel.addEventListener('change', async e => {
+      cid = e.target.value;
+      const c = await api.getClinic(cid);
+      if (!c) return;
+      nameEl.textContent = c.name; numEl.textContent = c.currentNumber;
+      panel.classList.remove('hidden');
+      onValue(ref(db, `clinics/${cid}/currentNumber`), s => numEl.textContent = s.val() ?? 0);
+    });
+
+    async function fireAndAnnounce(action) {
+      if (!cid) return;
+      let c;
+      switch (action) {
+        case 'adv': c = await api.advanceNumber(cid); break;
+        case 'back': c = await api.goBackNumber(cid); break;
+        case 'set':
+          const v = document.getElementById('setInp').value;
+          if (v !== '') { await api.setNumber(cid, v); document.getElementById('setInp').value = ''; }
+          c = await api.getClinic(cid); break;
+        case 'reset':
+          await api.resetNumber(cid);
+          c = await api.getClinic(cid);
+          speakReset(); break;
+      }
+      if (c && action !== 'reset') announce(c.name, c.currentNumber);
+    }
+
+    document.getElementById('adv').addEventListener('click', () => fireAndAnnounce('adv'));
+    document.getElementById('back').addEventListener('click', () => fireAndAnnounce('back'));
+    document.getElementById('setBtn').addEventListener('click', () => fireAndAnnounce('set'));
+    document.getElementById('reset').addEventListener('click', () => fireAndAnnounce('reset'));
+  </script>
 </body>
 </html>
