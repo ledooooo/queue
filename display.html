@@ -17,15 +17,13 @@
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
 
-  <!-- النصف العلوي: العيادات -->
-  <section id="topPanel" class="w-full p-4 overflow-y-auto">
+    <section id="topPanel" class="w-full p-4 overflow-y-auto">
     <h1 class="text-3xl md:text-4xl font-extrabold text-center text-[#004156] mb-4">الرقم الحالي</h1>
     <div id="cards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
   </section>
 
-  <!-- النصف السفلي: فيديو -->
-<section id="videoPanel" class="w-full bg-black flex items-center justify-center">
-            <iframe 
+    <section id="videoPanel" class="w-full bg-black flex items-center justify-center">
+        <iframe 
       width="100%" 
       height="100%" 
       src="https://www.youtube.com/embed/9z3sJxG-6SU?si=VIeP_WApWUqQ0dAc&autoplay=1&mute=1&loop=1&playlist=9z3sJxG-6SU" 
@@ -37,6 +35,7 @@
       class="h-full w-full object-cover" 
     ></iframe>
   </section>
+
   <script type="module">
     import { db, ref, onValue } from "./js/firebase-config.js";
 
@@ -57,6 +56,4 @@
     });
   </script>
 </body>
-
 </html>
-
