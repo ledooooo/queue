@@ -1,31 +1,37 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>شاشة طابور العيادات</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Tajawal', sans-serif; background: #d0e6f2; }
-    /* عدّل الارتفاع حسب شاشتك */
-    #topPanel    { height: 30vh; }
-    #videoPanel  { height: 70vh; }
-    .card        { background: #ffffff; border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,.08); }
-    .num         { font-size: 4rem; line-height: 1; color: #004156; }
-    @media (min-width:768px){ .num { font-size: 5rem; } }
-  </style>
+  <meta charset="UTF-8">
+  <title>شاشة طابور العيادات</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background: #d0e6f2; }
+    /* عدّل الارتفاع حسب شاشتك */
+    #topPanel    { height: 30vh; }
+    #videoPanel  { height: 70vh; }
+    .card        { background: #ffffff; border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,.08); }
+    .num         { font-size: 4rem; line-height: 1; color: #004156; }
+    @media (min-width:768px){ .num { font-size: 5rem; } }
+
+    /* ✅ تعديل خاصية الشبكة لجعل البطاقات مرنة وتملأ العرض تلقائياً (auto-fit) */
+    #cards {
+      /* يحدد الحد الأدنى لعرض البطاقة بـ 200px، ثم يقسم المساحة الباقية بالتساوي */
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    }
+  </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
 
-  <!-- النصف العلوي: العيادات -->
-  <section id="topPanel" class="w-full p-4 overflow-y-auto">
-    <h1 class="text-3xl md:text-4xl font-extrabold text-center text-[#004156] mb-4">الرقم الحالي</h1>
-    <div id="cards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
-  </section>
+    <section id="topPanel" class="w-full p-4 overflow-y-auto">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-center text-[#004156] mb-4">الرقم الحالي</h1>
+        <div id="cards" class="grid gap-4"></div> 
+  </section>
 
-  <!-- النصف السفلي: فيديو -->
-<section id="videoPanel" class="w-full bg-black flex items-center justify-center">
+    <section id="videoPanel" class="w-full bg-black flex items-center justify-center">
         <iframe 
+      width="100%" 
+      height="100%" 
       src="https://www.youtube.com/embed/9z3sJxG-6SU?si=VIeP_WApWUqQ0dAc&autoplay=1&mute=1&loop=1&playlist=9z3sJxG-6SU" 
       title="YouTube video player" 
       frameborder="0" 
@@ -47,7 +53,6 @@
 
     // دالة النطق
     function speakArabic(text) {
-      // التحقق من دعم المتصفح لواجهة برمجة تطبيقات النطق
       if (!synth) {
         console.warn('Speech Synthesis API is not supported in this browser.');
         return;
@@ -57,11 +62,9 @@
       const utterance = new SpeechSynthesisUtterance(text);
       
       // تعيين اللغة العربية
-      // الكود 'ar-SA' هو الأشهر للغة العربية (المملكة العربية السعودية)
       utterance.lang = 'ar-SA'; 
       
-      // يمكنك تعديل السرعة والصوت إذا لزم الأمر
-      utterance.rate = 0.9; // أبطأ قليلاً للقراءة الواضحة (اختياري)
+      utterance.rate = 0.9; 
 
       // قم بإلغاء أي نطق سابق لتجنب التداخل، ثم ابدأ النطق الجديد
       synth.cancel();
@@ -72,13 +75,13 @@
       container.innerHTML = '';
       const data = snap.val() || {};
       
-      let didUpdateOccur = false; // لمؤشر إذا ما تم تحديث أي رقم
-      let newCallText = ''; // لتخزين النص الذي سيتم نطقه
+      let didUpdateOccur = false; 
+      let newCallText = ''; 
 
       Object.keys(data).forEach(id => {
         const {name, currentNumber} = data[id];
         
-        // **1. التحقق من التغيير**
+        // **1. التحقق من التغيير والنطق**
         if (currentClinicNumbers[id] !== currentNumber) {
           didUpdateOccur = true;
           
@@ -89,7 +92,7 @@
           currentClinicNumbers[id] = currentNumber;
         }
 
-        // بناء بطاقات العيادات (يظل هذا الجزء كما هو)
+        // بناء بطاقات العيادات
         container.insertAdjacentHTML('beforeend', `
           <div class="card p-4 flex flex-col items-center justify-center">
             <h2 class="text-lg md:text-xl font-bold text-[#2a3e48] mb-2">${name}</h2>
@@ -106,5 +109,3 @@
   </script>
 </body>
 </html>
-
-
