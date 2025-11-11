@@ -1,11 +1,10 @@
-ده الكود الحالى
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <title>شاشة طابور العيادات</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com "></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400 ;500;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Tajawal', sans-serif; background: #d0e6f2; }
     /* عدّل الارتفاع حسب شاشتك */
@@ -18,22 +17,22 @@
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
 
-  <!-- النصف العلوي: العيادات -->
-  <section id="topPanel" class="w-full p-4 overflow-y-auto">
+    <section id="topPanel" class="w-full p-4 overflow-y-auto">
     <h1 class="text-3xl md:text-4xl font-extrabold text-center text-[#004156] mb-4">الرقم الحالي</h1>
     <div id="cards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
   </section>
 
-  <!-- النصف السفلي: فيديو -->
-<section id="videoPanel" class="w-full bg-black flex items-center justify-center">
-        <iframe 
-      src="https://www.youtube.com/embed/9z3sJxG-6SU?si=VIeP_WApWUqQ0dAc&autoplay=1&mute=1&loop=1&playlist=9z3sJxG-6SU" 
-      title="YouTube video player" 
-      frameborder="0" 
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-      referrerpolicy="strict-origin-when-cross-origin" 
+    <section id="videoPanel" class="w-full bg-black flex items-center justify-center">
+        <iframe 
+      width="100%" 
+      height="100%" 
+      src="https://www.youtube.com/embed/9z3sJxG-6SU?si=VIeP_WApWUqQ0dAc&autoplay=1&mute=1&loop=1&playlist=9z3sJxG-6SU" 
+      title="YouTube video player" 
+      frameborder="0" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+      referrerpolicy="strict-origin-when-cross-origin" 
       allowfullscreen
-      class="h-full w-full object-cover" 
+      class="h-full w-full object-cover" 
     ></iframe>
   </section>
 
@@ -42,9 +41,9 @@
 
     const container = document.getElementById('cards');
     // لتخزين الأرقام الحالية ومقارنتها بالتحديثات الجديدة
-    const currentClinicNumbers = {}; 
+    const currentClinicNumbers = {}; 
     // للحفاظ على كائن النطق
-    const synth = window.speechSynthesis; 
+    const synth = window.speechSynthesis; 
 
     // دالة النطق
     function speakArabic(text) {
@@ -56,11 +55,11 @@
 
       // إنشاء طلب النطق
       const utterance = new SpeechSynthesisUtterance(text);
-      
+      
       // تعيين اللغة العربية
       // الكود 'ar-SA' هو الأشهر للغة العربية (المملكة العربية السعودية)
-      utterance.lang = 'ar-SA'; 
-      
+      utterance.lang = 'ar-SA'; 
+      
       // يمكنك تعديل السرعة والصوت إذا لزم الأمر
       utterance.rate = 0.9; // أبطأ قليلاً للقراءة الواضحة (اختياري)
 
@@ -72,17 +71,17 @@
     onValue(ref(db, 'clinics'), snap => {
       container.innerHTML = '';
       const data = snap.val() || {};
-      
+      
       let didUpdateOccur = false; // لمؤشر إذا ما تم تحديث أي رقم
       let newCallText = ''; // لتخزين النص الذي سيتم نطقه
 
       Object.keys(data).forEach(id => {
         const {name, currentNumber} = data[id];
-        
+        
         // **1. التحقق من التغيير**
         if (currentClinicNumbers[id] !== currentNumber) {
           didUpdateOccur = true;
-          
+          
           // بناء رسالة النطق: "يرجى من صاحب الرقم [الرقم] التوجه إلى عيادة [الاسم]."
           newCallText += `يرجى من صاحب الرقم ${currentNumber} التوجه إلى عيادة ${name}. `;
 
@@ -98,7 +97,7 @@
             <span class="text-sm text-gray-500 mt-1">الرقم الحالي</span>
           </div>`);
       });
-      
+      
       // **2. تنفيذ النطق عند وجود تحديثات**
       if (didUpdateOccur && newCallText) {
         speakArabic(newCallText);
@@ -107,6 +106,3 @@
   </script>
 </body>
 </html>
-
-
-اديني الكود كامل بعد التعديلات والمقترحات
