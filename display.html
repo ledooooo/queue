@@ -8,8 +8,8 @@
   <style>
     body { font-family: 'Tajawal', sans-serif; background: #d0e6f2; }
     /* عدّل الارتفاع حسب شاشتك */
-    #topPanel    { height: 65vh; }
-    #videoPanel  { height: 35vh; }
+    #topPanel    { height: 35vh; }
+    #videoPanel  { height: 65vh; }
     .card        { background: #ffffff; border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,.08); }
     .num         { font-size: 4rem; line-height: 1; color: #004156; }
     @media (min-width:768px){ .num { font-size: 5rem; } }
@@ -24,14 +24,19 @@
   </section>
 
   <!-- النصف السفلي: فيديو -->
-  <section id="videoPanel" class="w-full bg-black flex items-center justify-center">
-    <!-- يمكنك وضع أي فيديو تريده -->
-    <video id="vid" class="h-full w-full object-cover" autoplay muted loop>
-      <source src="vid.mp4" type="video/mp4">
-      <!-- fallback يوتيوب (اختياري) -->
-      <!-- <iframe class="w-full h-full" src="https://www.youtube.com/embed/XXXX?autoplay=1&mute=1&loop=1" frameborder="0"></iframe> -->
-    </video>
-  </section>
+<section id="videoPanel" class="w-full bg-black flex items-center justify-center">
+        <iframe 
+      width="100%" 
+      height="100%" 
+      src="https://www.youtube.com/embed/9z3sJxG-6SU?si=VIeP_WApWUqQ0dAc&autoplay=1&mute=1&loop=1&playlist=9z3sJxG-6SU" 
+      title="YouTube video player" 
+      frameborder="0" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+      referrerpolicy="strict-origin-when-cross-origin" 
+      allowfullscreen
+      class="h-full w-full object-cover" 
+    ></iframe>
+  </section>
 
   <script type="module">
     import { db, ref, onValue } from "./js/firebase-config.js";
@@ -54,3 +59,4 @@
   </script>
 </body>
 </html>
+
