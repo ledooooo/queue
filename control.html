@@ -56,23 +56,39 @@
       onValue(ref(db, `clinics/${cid}/currentNumber`), s => numEl.textContent = s.val() ?? 0);
     });
 
-    async function fireAndAnnounce(action) {
-      if (!cid) return;
-      let c;
-      switch (action) {
-        case 'adv': c = await api.advanceNumber(cid); break;
-        case 'back': c = await api.goBackNumber(cid); break;
-        case 'set':
-          const v = document.getElementById('setInp').value;
-          if (v !== '') { await api.setNumber(cid, v); document.getElementById('setInp').value = ''; }
-          c = await api.getClinic(cid); break;
-        case 'reset':
-          await api.resetNumber(cid);
-          c = await api.getClinic(cid);
-          speakReset(); break;
-      }
-      if (c && action !== 'reset') announce(c.name, c.currentNumber);
-    }
+async function fireAndAnnounce(action) {
+      if (!cid) return;
+      let c;
+      
+      // 1. تنفيذ العملية على Firebase
+      switch (action) {
+        case 'adv': c = await api.advanceNumber(cid); break;
+        case 'back': c = await api.goBackNumber(cid); break;
+        case 'set':
+          const v = document.getElementById('setInp').value;
+          if (v !== '') { await api.setNumber(cid, v); document.getElementById('setInp').value = ''; }
+          c = await api.getClinic(cid); break;
+        case 'reset':
+          await api.resetNumber(cid);
+          c = await api.getClinic(cid);
+          speakReset(); break;
+        default: return;
+      }
+      
+      // 2. جلب أحدث بيانات العيادة
+      // ملاحظة: c يجب أن يحمل بيانات العيادة المحدثة بعد كل عملية
+      if (!c) {
+          c = await api.getClinic(cid);
+      }
+      
+      // 3. تحديث الرقم في الواجهة فوراً
+      if (c) {
+          numEl.textContent = c.currentNumber;
+      }
+
+      // 4. إعلان الرقم الجديد (كما كان في الكود الأصلي)
+      if (c && action !== 'reset') announce(c.name, c.currentNumber);
+    }
 
     document.getElementById('adv').addEventListener('click', () => fireAndAnnounce('adv'));
     document.getElementById('back').addEventListener('click', () => fireAndAnnounce('back'));
@@ -81,3 +97,4 @@
   </script>
 </body>
 </html>
+
