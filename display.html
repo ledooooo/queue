@@ -111,6 +111,33 @@
       });
     });
   </script>
+
+
+<script type="module">
+  import { ref, onValue } from "./js/firebase-config.js";
+  import { speak } from "./js/tts.js";
+
+  /* عرض استدعاء المريض */
+  const callPanel = document.createElement('div');
+  callPanel.id = 'callPanel';
+  callPanel.className = 'fixed top-4 left-4 bg-yellow-400 text-black px-6 py-3 rounded-xl shadow-lg text-2xl font-bold hidden';
+  document.body.appendChild(callPanel);
+
+  onValue(ref(db, 'patientCall'), snap => {
+    snap.forEach(child => {
+      const { name, ts } = child.val();
+      if (Date.now() - ts < 10000) { // أقل من 10 ثوانٍ
+        callPanel.textContent = 'استدعاء: ' + name;
+        callPanel.classList.remove('hidden');
+        speak('استدعاء ' + name);
+        setTimeout(() => callPanel.classList.add('hidden'), 8000);
+      }
+    });
+  });
+</script>
+
+  
 </body>
 </html>
+
 
