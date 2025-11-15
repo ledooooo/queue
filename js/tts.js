@@ -21,16 +21,24 @@ function playOne(f) {
 }
 
 /* ----------  number → file list (correct order)  ---------- */
+/* ----------  رقم 0-99 → ملفات بالترتيب الصحيح ---------- */
 function numberFiles(n) {
   if (n === 0) return ['0.mp3'];
-  const ones = n % 10, tens = n - ones;
-  const arr = [];
-  if (ones > 0) arr.push(`${ones}.mp3`);
-  if (tens > 0) {
-    arr.push(`${tens}.mp3`);
-    if (CFG.wa && ones > 0) arr.unshift('wa.mp3');   // "و" file (optional)
-  }
-  return arr;
+  if (n <= 10) return [`${n}.mp3`];
+
+  const ones = n % 10;
+  const tens = Math.floor(n / 10) * 10;
+  const out = [];
+
+  // أولاً: الآحاد إن وُجدت
+  if (ones > 0) out.push(`${ones}.mp3`);
+
+  // ثانياً: «و» (اختيارى)
+  if (CFG.wa && ones > 0) out.push('wa.mp3');
+
+  // أخيراً: العشرة
+  out.push(`${tens}.mp3`);
+  return out;
 }
 
 /* ----------  queue runner  ---------- */
@@ -89,3 +97,4 @@ export function buildAdminControls(parentId = 'adminControls') {
     alert('تم الحفظ – أعد تحميل الصفحة لتطبيق التغييرات');
   };
 }
+
