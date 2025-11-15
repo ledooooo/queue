@@ -24,6 +24,8 @@ function playOne(f) {
 function numberFiles(n) {
   if (n === 0) return ['0.mp3'];
   if (n <= 10) return [`${n}.mp3`];
+  // 11-19 مباشرة
+  if (n < 20) return [`${n}.mp3`];
 
   const ones = n % 10, tens = Math.floor(n / 10) * 10;
   const out = [];
@@ -53,7 +55,7 @@ export function speak(text) {
     list.push(...numberFiles(n));                  // الآحاد والعشرات
 
     // استخراج اسم العيادة (بعد «عيادة» أو «إلى»)
-    const m = text.match(/عيادة ([\w\u0600-\u06FF_]+)/) || text.match(/إلى ([\w\u0600-\u06FF_]+)/);
+    const m = text.match(/عيادة ([\w\u0600-\u06FF-]+)/) || text.match(/إلى ([\w\u0600-\u06FF-]+)/);
     if (m) list.push(`clinic_${m[1]}.mp3`);        // «عيادة طب الأسرة»
     else list.push('suffix.mp3');                  // fallback
   } else if (text === 'تمت إعادة التعيين') {
@@ -68,7 +70,7 @@ export function speak(text) {
 
 /* ----------  helpers (unchanged signature)  ---------- */
 export function announce(clinicName, num) {
-  const id = clinicName.replace(/\s+/g, '_');      // استبدال المسافات بـ _
+  const id = clinicName.replace(/\s+/g, '-');      // استبدال المسافات بـ dash
   speak(`على العميل رقم ${num} التوجه إلى عيادة ${id}`);
 }
 export function speakReset() {
