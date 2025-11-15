@@ -17,6 +17,10 @@
 
     <!-- حقل نص -->
     <input id="clientName" type="text" placeholder="اسم العميل" class="w-full p-3 border rounded-lg text-lg">
+    <!-- اختيار العيادة من قائمة منسدلة -->
+    <select id="clinicSelect" class="w-full p-3 border rounded-lg text-lg">
+      <option value="" disabled selected>-- اختر عيادة --</option>
+    </select>
 
     <!-- أزرار التحكم -->
     <div class="flex gap-3">
@@ -98,19 +102,31 @@
       }
     });
 
+    /* ---------- ملء قائمة العيادات لحظياً ---------- */
+    const clinicSelect = document.getElementById('clinicSelect');
+    onValue(ref(db, 'clinics'), snap => {
+      clinicSelect.innerHTML = '<option value="" disabled selected>-- اختر عيادة --</option>';
+      snap.forEach(ch => {
+        const {name} = ch.val();
+        clinicSelect.insertAdjacentHTML('beforeend', `<option value="${name}">${name}</option>`);
+      });
+    });
+
     /* ---------- إدخال اسم العميل (نص أو تسجيل صوتي) + إرساله إلى currentClient ---------- */
     const clientInp   = document.getElementById('clientName');
     const sendBtn     = document.getElementById('sendBtn');
     const micBtn      = document.getElementById('micBtn');
     const statusMsg   = document.getElementById('statusMsg');
 
-    // إرسال نص
+    // إرسال نص + العيادة المختارة
     sendBtn.addEventListener('click', () => {
       const name = clientInp.value.trim();
-      if (!name) { statusMsg.textContent = 'أدخل اسم العميل أولاً'; return; }
-      set(ref(db, 'currentClient'), { name: name, timestamp: Date.now() });
-      statusMsg.textContent = 'تم إرسال الاسم وعرضه على الشاشة';
+      const clinic = clinicSelect.value;
+      if (!name || !clinic) { statusMsg.textContent = 'أكمل الحقول أولاً'; return; }
+      set(ref(db, 'currentClient'), { name: name, clinic: clinic, timestamp: Date.now() });
+      statusMsg.textContent = 'تم الإرسال وعرضه على الشاشة';
       clientInp.value = '';
+      clinicSelect.selectedIndex = 0;
     });
 
     // تسجيل صوتي
