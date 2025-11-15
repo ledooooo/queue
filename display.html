@@ -15,24 +15,21 @@
     @media (min-width:1024px){ .clinicNum { font-size: 5rem; } }
     .highlight { background: #fef3c7 !important; animation: blink 0.6s ease-in-out 4; }
     @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
-    /* قسم عرض الجمل المنطوقة */
-    #phraseBox { background: #e0f2fe; border-bottom: 4px solid #0288d1; }
-    #phraseText { font-size: 2.5rem; line-height: 1.2; color: #01579b; }
+    /* قسم عرض الجملة */
+    #phraseBox { background: #e0f2fe; border-bottom: 4px solid #0288d1; min-height: 25%; }
+    #phraseText { font-size: 2.5rem; line-height: 1.2; color: #01579b; word-break: break-word; }
     /* منطقة الفيديو */
-    #videoBox  { background: #000; }
+    #videoBox  { background: #000; flex: 1; }
   </style>
 </head>
 <body class="overflow-hidden">
 
-  <!-- التقسيم الطولي: يسار 25% + يمين 75% -->
   <div id="mainGrid" class="flex w-full h-full">
 
-    <!-- ========== يسار: العيادات (25%) ========== -->
+    <!-- يسار: العيادات (25%) -->
     <section class="leftCol p-4 overflow-y-auto flex flex-col gap-4" id="clinicsPanel">
       <h1 class="text-3xl lg:text-4xl font-extrabold text-center text-[#004156] mb-4">الرقم الحالي</h1>
       <div id="cards" class="flex flex-col gap-4"></div>
-
-      <!-- تحكم سرعة النطق -->
       <div class="mt-auto bg-white p-3 rounded-xl shadow flex items-center gap-3">
         <label class="text-sm font-bold text-[#004156]">سرعة النطق:</label>
         <input id="speedRange" type="range" min="0.5" max="2" step="0.1" value="1" class="flex-1">
@@ -40,15 +37,11 @@
       </div>
     </section>
 
-    <!-- ========== يمين: أعلى 25% عرض الجمل + أسفل 50% الفيديو ========== -->
+    <!-- يمين: أعلى 25% عرض الجملة + أسفل 50% الفيديو -->
     <section class="rightCol flex flex-col">
-
-      <!-- أعلى: عرض الجمل/الأسماء المنطوقة (25%) -->
       <div id="phraseBox" class="w-full p-6 flex items-center justify-center text-center">
         <p id="phraseText" class="font-extrabold">-- اضغط على أى زر لظهور الجملة --</p>
       </div>
-
-      <!-- أسفل: الفيديو (50%) -->
       <div id="videoBox" class="w-full flex-1">
         <iframe id="vidFrame" width="100%" height="100%"
           src="https://www.youtube.com/embed/9z3sJxG-6SU?autoplay=1&mute=1&loop=1&playlist=9z3sJxG-6SU"
@@ -56,13 +49,12 @@
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen></iframe>
       </div>
-
     </section>
 
   </div>
 
   <script type="module">
-    import { db, ref, onValue } from "./js/firebase-config.js";
+    import { db, ref, onValue, get } from "./js/firebase-config.js";
     import { announce } from "./js/tts.js";
 
     /* ---------- سرعة النطق ---------- */
@@ -103,11 +95,8 @@
         }
 
         if (lastNumbers[id] !== undefined && lastNumbers[id] !== currentNumber) {
-          // تمييز لوني + وميض
           card.classList.add('highlight');
           setTimeout(() => card.classList.remove('highlight'), 3000);
-
-          // بناء الجملة وعرضها + نطقها
           const sentence = `على العميل رقم ${currentNumber} التوجه إلى عيادة ${name}`;
           phraseText.textContent = sentence;
           announce(name, currentNumber);
@@ -122,6 +111,25 @@
         }
       });
     });
+
+    /* ---------- استماع لمسار currentClient (نص أو صوت) ---------- */
+    onValue(ref(db, 'currentClient'), async snap => {
+      if (!snap.exists()) return;
+      const val = snap.val();
+      if (val.name) {
+        // نص
+        const sentence = `على العميل ${val.name} التوجه إلى العيادة`;
+        phraseText.textContent = sentence;
+        announce('العيادة', 1); // نمرر اسم عام لإتمام النطق
+      } else if (val.audioURL) {
+        // صوت مسجل
+        phraseText.textContent = 'جاري تشغيل التسجيل...';
+        const audio = new Audio(val.audioURL);
+        audio.play().catch(() => {});
+        audio.onended = () => phraseText.textContent = '-- جاهز --';
+      }
+    });
+
   </script>
 </body>
 </html>
