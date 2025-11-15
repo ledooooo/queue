@@ -17,7 +17,14 @@
       <input id="newInp" type="text" placeholder="اسم العيادة" class="w-full p-3 border rounded-lg">
       <button id="addBtn" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">أضف</button>
     </div>
-<!-- لوحة استدعاء مريض -->
+
+    <!-- إدارة -->
+    <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
+      <h2 class="text-xl font-bold text-[#004156]">العيادات الحالية</h2>
+      <ul id="list" class="space-y-3"></ul>
+    </div>
+  </div>
+  <!-- لوحة استدعاء مريض -->
 <div class="bg-white p-4 rounded-xl shadow mt-4 max-w-2xl mx-auto space-y-3">
   <h3 class="font-bold text-[#004156]">استدعاء مريض</h3>
 
@@ -39,12 +46,6 @@
   <p id="recMsg" class="text-xs text-gray-500 hidden">اضغط مطولاً على الميكروفون وتحدث بالعربية</p>
 </div>
 
-    <!-- إدارة -->
-    <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
-      <h2 class="text-xl font-bold text-[#004156]">العيادات الحالية</h2>
-      <ul id="list" class="space-y-3"></ul>
-    </div>
-  </div>
 <!-- عنصر تحكم السرعة -->
 <script type="module">
   import { buildSpeedControl } from './js/tts.js';
@@ -87,4 +88,5 @@
 </body>
 
 </html>
+
 
