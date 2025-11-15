@@ -98,7 +98,7 @@
       }
     });
 
-    /* ---------- إدخال اسم العميل (نص أو تسجيل صوتي) ---------- */
+    /* ---------- إدخال اسم العميل (نص أو تسجيل صوتي) + إرساله إلى currentClient ---------- */
     const clientInp   = document.getElementById('clientName');
     const sendBtn     = document.getElementById('sendBtn');
     const micBtn      = document.getElementById('micBtn');
@@ -108,32 +108,24 @@
     sendBtn.addEventListener('click', () => {
       const name = clientInp.value.trim();
       if (!name) { statusMsg.textContent = 'أدخل اسم العميل أولاً'; return; }
-      // نرسل الاسم إلى قاعدة البيانات تحت مسار "currentClient"
       set(ref(db, 'currentClient'), { name: name, timestamp: Date.now() });
       statusMsg.textContent = 'تم إرسال الاسم وعرضه على الشاشة';
       clientInp.value = '';
     });
 
-    // تسجيل صوتي (ميكروفون)
+    // تسجيل صوتي
     let mediaRecorder;
     let audioChunks = [];
     micBtn.addEventListener('click', async () => {
       if (!navigator.mediaDevices) { statusMsg.textContent = 'المتصفح لا يدعم الميكروفون'; return; }
       statusMsg.textContent = 'جاري التسجيل... اضغط مرة أخرى للإيقاف';
-
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-        return;
-      }
-
+      if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); return; }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder = new MediaRecorder(stream);
       audioChunks = [];
       mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        // رفع الملف إلى Firebase Storage (أو حفظه محلياً ثم تشغيله)
-        // هنا نكتفي بعرض اسم مؤقت
         const url = URL.createObjectURL(audioBlob);
         set(ref(db, 'currentClient'), { audioURL: url, timestamp: Date.now() });
         statusMsg.textContent = 'تم التسجيل وإرساله';
