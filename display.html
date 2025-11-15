@@ -42,13 +42,13 @@
       <div id="phraseBox" class="w-full p-6 flex items-center justify-center text-center">
         <p id="phraseText" class="font-extrabold">-- اضغط على أى زر لظهور الجملة --</p>
       </div>
-      <div id="videoBox" class="w-full flex-1">
-        <iframe id="vidFrame" width="100%" height="100%"
-          src="https://www.youtube.com/embed/9z3sJxG-6SU?autoplay=1&mute=1&loop=1&playlist=9z3sJxG-6SU"
-          title="YouTube video player" frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen></iframe>
-      </div>
+<!-- أسفل: مشغل متسلسل (فيديو + صور) -->
+<div id="videoBox" class="w-full flex-1 bg-black relative">
+  <!-- فيديو متسلسل -->
+  <video id="seqPlayer" class="w-full h-full object-cover" controls muted autoplay></video>
+  <!-- صورة مؤقتة (نخفيها أثناء الفيديو) -->
+  <img id="seqImage" class="w-full h-full object-cover hidden" alt="slide">
+</div>
     </section>
 
   </div>
@@ -130,6 +130,7 @@ onValue(ref(db, 'currentClient'), async snap => {
   </script>
 </body>
 </html>
+
 
 
 
