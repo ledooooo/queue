@@ -14,22 +14,24 @@
     .clinicNum  { font-size: 4rem; line-height: 1; color: #004156; }
     @media (min-width:1024px){ .clinicNum { font-size: 5rem; } }
     .highlight { background: #fef3c7 !important; animation: blink 0.6s ease-in-out 4; }
-    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.4;}}
     /* قسم عرض الجملة */
     #phraseBox { background: #e0f2fe; border-bottom: 4px solid #0288d1; min-height: 20%; }
     #phraseText { font-size: 2.5rem; line-height: 1.2; color: #01579b; word-break: break-word; }
-    /* منطقة الفيديو */
+    /* منطقة الفيديو/الصور المتسلسلة */
     #videoBox  { background: #000; flex: 1; }
   </style>
 </head>
 <body class="overflow-hidden">
 
+  <!-- التقسيم الطولي: يسار 25% + يمين 75% -->
   <div id="mainGrid" class="flex w-full h-full">
 
-    <!-- يسار: العيادات (25%) -->
+    <!-- ========== يسار: العيادات (25%) ========== -->
     <section class="leftCol p-4 overflow-y-auto flex flex-col gap-4" id="clinicsPanel">
       <h1 class="text-3xl lg:text-4xl font-extrabold text-center text-[#004156] mb-4">الرقم الحالي</h1>
       <div id="cards" class="flex flex-col gap-4"></div>
+      <!-- تحكم سرعة النطق -->
       <div class="mt-auto bg-white p-3 rounded-xl shadow flex items-center gap-3">
         <label class="text-sm font-bold text-[#004156]">سرعة النطق:</label>
         <input id="speedRange" type="range" min="0.5" max="2" step="0.1" value="1" class="flex-1">
@@ -37,27 +39,29 @@
       </div>
     </section>
 
-    <!-- يمين: أعلى 25% عرض الجملة + أسفل 50% الفيديو -->
+    <!-- ========== يمين: أعلى 20% عرض الجملة + أسفل 80% مشغل متسلسل (فيديو + صور) ========== -->
     <section class="rightCol flex flex-col">
+      <!-- أعلى: عرض الجملة/الأسماء المنطوقة -->
       <div id="phraseBox" class="w-full p-6 flex items-center justify-center text-center">
         <p id="phraseText" class="font-extrabold">-- اضغط على أى زر لظهور الجملة --</p>
       </div>
-<!-- أسفل: مشغل متسلسل (فيديو + صور) -->
-<div id="videoBox" class="w-full flex-1 bg-black relative">
-  <!-- فيديو متسلسل -->
-  <video id="seqPlayer" class="w-full h-full object-cover" controls muted autoplay></video>
-  <!-- صورة مؤقتة (نخفيها أثناء الفيديو) -->
-  <img id="seqImage" class="w-full h-full object-cover hidden" alt="slide">
-</div>
+
+      <!-- أسفل: مشغل متسلسل (فيديو + صور) -->
+      <div id="videoBox" class="w-full flex-1 bg-black relative">
+        <!-- فيديو متسلسل -->
+        <video id="seqPlayer" class="w-full h-full object-cover" controls muted autoplay></video>
+        <!-- صورة مؤقتة (تُظهر أثناء عرض الصور) -->
+        <img id="seqImage" class="w-full h-full object-cover hidden" alt="slide">
+      </div>
     </section>
 
   </div>
 
   <script type="module">
-    import { db, ref, onValue, get } from "./js/firebase-config.js";
+    import { db, ref, onValue } from "./js/firebase-config.js";
     import { announce } from "./js/tts.js";
 
-    /* ---------- سرعة النطق ---------- */
+    /* ---------- تحكم سرعة النطق ---------- */
     const speedKey = 'ttsSpeed';
     const speedRange = document.getElementById('speedRange');
     const speedVal   = document.getElementById('speedVal');
@@ -113,24 +117,66 @@
     });
 
     /* ---------- استماع لمسار currentClient (نص أو صوت) ---------- */
-onValue(ref(db, 'currentClient'), async snap => {
-  if (!snap.exists()) return;
-  const val = snap.val();
-  if (val.name && val.clinic) {
-    const sentence = `على العميل ${val.name} التوجه إلى عيادة ${val.clinic}`;
-    phraseText.textContent = sentence;
-    announce(val.clinic, 1); // نمرر اسم العيادة لإتمام النطق
-  } else if (val.audioURL) {
-    phraseText.textContent = 'جاري تشغيل التسجيل...';
-    const audio = new Audio(val.audioURL);
-    audio.play().catch(() => {});
-    audio.onended = () => phraseText.textContent = '-- جاهز --';
-  }
-});
+    onValue(ref(db, 'currentClient'), snap => {
+      if (!snap.exists()) return;
+      const val = snap.val();
+      if (val.name && val.clinic) {
+        const sentence = `على العميل ${val.name} التوجه إلى عيادة ${val.clinic}`;
+        phraseText.textContent = sentence;
+        announce(val.clinic, 1);
+      } else if (val.audioURL) {
+        phraseText.textContent = 'جاري تشغيل التسجيل...';
+        const audio = new Audio(val.audioURL);
+        audio.play().catch(() => {});
+        audio.onended = () => phraseText.textContent = '-- جاهز --';
+      }
+    });
+
+    /* ---------- مشغل متسلسل (فيديو + صور) من مجلد media/ على GitHub ---------- */
+    const mediaBase = 'https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/media/'; // غيّرها لرابطك
+    // أو لو على نفس السيرفر: const mediaBase = './media/';
+
+    const playlist = [
+      '1.mp4', '2.jpg', '3.mp4', '4.png' // اكتب أسماء ملفاتك بالترتيب هنا
+    ];
+
+    let current = 0;
+    const player = document.getElementById('seqPlayer');
+    const image  = document.getElementById('seqImage');
+
+    // دالة الانتقال للملف التالي
+    function playNext() {
+      current = (current + 1) % playlist.length;
+      loadMedia();
+    }
+
+    // دالة تحميل وتشغيل الوسائط
+    function loadMedia() {
+      const src = mediaBase + playlist[current];
+      const isVideo = /\.(mp4|webm|ogg)$/i.test(playlist[current]);
+
+      if (isVideo) {
+        // إخفاء الصورة وإظهار الفيديو
+        image.classList.add('hidden');
+        player.classList.remove('hidden');
+        player.src = src;
+        player.play().catch(() => {});
+      } else {
+        // إخفاء الفيديو وإظهار الصورة
+        player.classList.add('hidden');
+        image.classList.remove('hidden');
+        image.src = src;
+        // بعد 4 ثوانٍ انتقل للتالي (غيّر المدة حسب رغبتك)
+        setTimeout(playNext, 4000);
+      }
+    }
+
+    // عند انتهاء الفيديو أو فشل التحميل انتقل للتالي
+    player.addEventListener('ended', playNext);
+    player.addEventListener('error', playNext);
+
+    // بداية التشغيل التلقائى
+    loadMedia();
   </script>
 </body>
 </html>
-
-
-
-
