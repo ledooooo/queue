@@ -8,33 +8,67 @@
   <style>body{font-family:'Tajawal',sans-serif;background:#d0e6f2}</style>
 </head>
 <body class="min-h-screen p-6">
+
   <h1 class="text-3xl font-bold text-center text-[#004156] mb-6">إدارة العيادات</h1>
 
+  <!-- جزء إدخال اسم العميل -->
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow-xl mb-6 space-y-4">
+    <h2 class="text-xl font-bold text-[#004156]">إدخال اسم العميل</h2>
+
+    <!-- حقل نص -->
+    <input id="clientName" type="text" placeholder="اسم العميل" class="w-full p-3 border rounded-lg text-lg">
+
+    <!-- أزرار التحكم -->
+    <div class="flex gap-3">
+      <button id="sendBtn" class="flex-1 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">إرسال وعرض</button>
+      <button id="micBtn"  class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">🎤 تسجيل صوتي</button>
+    </div>
+
+    <!-- رسالة حالة -->
+    <p id="statusMsg" class="text-sm text-gray-600 text-center"></p>
+  </div>
+
+  <!-- باقي أقسام الإدارة (إضافة/حذف/تسمية العيادات) -->
   <div class="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-    <!-- إضافة -->
     <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
       <h2 class="text-xl font-bold text-[#004156]">إضافة عيادة جديدة</h2>
       <input id="newInp" type="text" placeholder="اسم العيادة" class="w-full p-3 border rounded-lg">
       <button id="addBtn" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">أضف</button>
     </div>
 
-    <!-- إدارة -->
     <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
       <h2 class="text-xl font-bold text-[#004156]">العيادات الحالية</h2>
       <ul id="list" class="space-y-3"></ul>
     </div>
   </div>
 
-<!-- عنصر تحكم السرعة -->
-<script type="module">
-  import { buildSpeedControl } from './js/tts.js';
-  buildSpeedControl(); // يُنشئ العنصر ويُلصقه بالصفحة
-</script>
-  
+  <!-- عنصر تحكم السرعة -->
+  <div id="adminSpeed" class="max-w-3xl mx-auto mt-6"></div>
+
   <script type="module">
-    import { api } from "./js/api.js";
+    import { db, ref, get, set, update, remove, onValue, push } from "./js/firebase-config.js";
+    import { buildSpeedControl } from "./js/tts.js";
+
+    /* ---------- إدارة العيادات (كما كان) ---------- */
+    const api = {
+      getClinics: async () => {
+        const s = await get(ref(db, "clinics"));
+        const d = s.val() || {};
+        return Object.keys(d).map(id => ({ id, ...d[id] }));
+      },
+      addClinic: async name => {
+        const r = push(ref(db, "clinics"));
+        const c = { id: r.key, name, currentNumber: 0 };
+        await set(r, c);
+        return c;
+      },
+      renameClinic: (id, n) => update(ref(db, `clinics/${id}`), { name: n }),
+      deleteClinic: id => remove(ref(db, `clinics/${id}`)),
+    };
+
     async function render() {
-      const list = document.getElementById('list'); list.innerHTML = '';
+      const list = document.getElementById('list');
+      list.innerHTML = '';
       const clinics = await api.getClinics();
       if (!clinics.length) { list.innerHTML = '<li class="text-gray-500">لا توجد عيادات</li>'; return; }
       clinics.forEach(({id, name}) => list.insertAdjacentHTML('beforeend', `
@@ -63,13 +97,53 @@
         if (v) { await api.renameClinic(id, v); inp.value = ''; render(); }
       }
     });
+
+    /* ---------- إدخال اسم العميل (نص أو تسجيل صوتي) ---------- */
+    const clientInp   = document.getElementById('clientName');
+    const sendBtn     = document.getElementById('sendBtn');
+    const micBtn      = document.getElementById('micBtn');
+    const statusMsg   = document.getElementById('statusMsg');
+
+    // إرسال نص
+    sendBtn.addEventListener('click', () => {
+      const name = clientInp.value.trim();
+      if (!name) { statusMsg.textContent = 'أدخل اسم العميل أولاً'; return; }
+      // نرسل الاسم إلى قاعدة البيانات تحت مسار "currentClient"
+      set(ref(db, 'currentClient'), { name: name, timestamp: Date.now() });
+      statusMsg.textContent = 'تم إرسال الاسم وعرضه على الشاشة';
+      clientInp.value = '';
+    });
+
+    // تسجيل صوتي (ميكروفون)
+    let mediaRecorder;
+    let audioChunks = [];
+    micBtn.addEventListener('click', async () => {
+      if (!navigator.mediaDevices) { statusMsg.textContent = 'المتصفح لا يدعم الميكروفون'; return; }
+      statusMsg.textContent = 'جاري التسجيل... اضغط مرة أخرى للإيقاف';
+
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        // رفع الملف إلى Firebase Storage (أو حفظه محلياً ثم تشغيله)
+        // هنا نكتفي بعرض اسم مؤقت
+        const url = URL.createObjectURL(audioBlob);
+        set(ref(db, 'currentClient'), { audioURL: url, timestamp: Date.now() });
+        statusMsg.textContent = 'تم التسجيل وإرساله';
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRecorder.start();
+    });
+
+    /* ---------- عنصر تحكم السرعة ---------- */
+    buildSpeedControl();
   </script>
-
-  
 </body>
-
 </html>
-
-
-
-
