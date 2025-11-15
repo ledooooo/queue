@@ -24,7 +24,12 @@
       <ul id="list" class="space-y-3"></ul>
     </div>
   </div>
-
+<!-- عنصر تحكم السرعة -->
+<script type="module">
+  import { buildSpeedControl } from './js/tts.js';
+  buildSpeedControl(); // يُنشئ العنصر ويُلصقه بالصفحة
+</script>
+  
   <script type="module">
     import { api } from "./js/api.js";
     async function render() {
@@ -59,4 +64,5 @@
     });
   </script>
 </body>
+
 </html>
