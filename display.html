@@ -33,7 +33,7 @@
 
     <!-- ========== يسار: العيادات (25%) ========== -->
     <section class="leftCol p-4 overflow-y-auto flex flex-col gap-4" id="clinicsPanel">
-      <h1 class="text-3xl lg:text-4xl font-extrabold text-center text-[#004156] mb-4">الرقم الحالي</h1>
+      <h1 class="text-3xl lg:text-4xl font-extrabold text-center text-[#004156] mb-4">لوحة الانتظار</h1>
       <div id="cards" class="flex flex-col gap-4"></div>
 
       <!-- تحكم سرعة النطق -->
@@ -97,7 +97,7 @@
 
         if (lastNumbers[id] !== undefined && lastNumbers[id] !== currentNumber) {
           card.classList.add('highlight'); // تمييز لوني + وميض
-          setTimeout(() => card.classList.remove('highlight'), 3000);
+          setTimeout(() => card.classList.remove('highlight'), 5000);
           announce(name, currentNumber);
         }
         lastNumbers[id] = currentNumber;
@@ -113,3 +113,4 @@
   </script>
 </body>
 </html>
+
