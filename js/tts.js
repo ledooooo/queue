@@ -1,18 +1,48 @@
-export function speak(text) {
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "ar-SA"; u.rate = 0.9; u.pitch = 1; u.volume = 1;
-  window.speechSynthesis.speak(u);
+/* ----------  off-line MP3 TTS  ---------- */
+const AUDIO_DIR = 'audio/';          // change to '../audio/' or absolute path if needed
+
+/* play one file */
+function play(f) {
+  return new Promise(res => {
+    const a = new Audio(AUDIO_DIR + f);
+    a.addEventListener('ended', res, {once: true});
+    a.play().catch(() => res());     // ignore blocked autoplay
+  });
 }
 
-export function announce(clinicName, num) {
-  const toWords = n => {
-    const a = ["صفر","واحد","اثنان","ثلاثة","أربعة","خمسة","ستة","سبعة","ثمانية","تسعة","عشرة"];
-    return n <= 10 ? a[n] : n;
-  };
-  speak(`على العميل رقم ${toWords(num)} التوجه إلى عيادة ${clinicName}`);
+/* convert 0-99 → file list */
+function numberFiles(n) {
+  if (n === 0) return ['0.mp3'];
+  const ones = n % 10;
+  const tens = n - ones;
+  const arr = [];
+  if (tens > 0) arr.push(`${tens}.mp3`);
+  if (ones > 0)  arr.push(`${ones}.mp3`);
+  return arr;
 }
 
-export function speakReset() {
-  speak("تمت إعادة التعيين");
+/* main speak */
+export async function speak(text) {
+  const list = [];
+  if (text.startsWith('على العميل رقم')) {
+    list.push('prefix.mp3');                       // “على العميل رقم”
+    const n = Number(text.match(/\d+/)[0]);        // extract number
+    list.push(...numberFiles(n));                  // ones + tens
+    list.push('suffix.mp3');                       // “التوجه إلى عيادة”
+  } else if (text === 'تمت إعادة التعيين') {
+    list.push('reset.mp3');
+  } else {                                         // fallback
+    const m = text.match(/\d+/);
+    if (m) list.push(...numberFiles(Number(m[0])));
+  }
+  /* play chain */
+  for (const f of list) await play(f);
+}
+
+/* helpers (unchanged signature) */
+export async function announce(clinicName, num) {
+  await speak(`على العميل رقم ${num} التوجه إلى عيادة ${clinicName}`);
+}
+export async function speakReset() {
+  await speak('تمت إعادة التعيين');
 }
