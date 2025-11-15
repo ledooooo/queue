@@ -85,8 +85,51 @@
       }
     });
   </script>
+
+<script type="module">
+  import { ref, set, push } from "./js/firebase-config.js";
+
+  const ptName   = document.getElementById('ptName');
+  const speakBtn = document.getElementById('speakBtn');
+  const micBtn   = document.getElementById('micBtn');
+  const recMsg   = document.getElementById('recMsg');
+
+  /* ===== نطق وإرسال إلى display ===== */
+  speakBtn.onclick = () => {
+    const name = ptName.value.trim();
+    if (!name) return alert('أدخل اسم المريض');
+    // نكتب فى قاعدة البيانات تحت فرع patientCall
+    const callRef = push(ref(db, 'patientCall'));
+    set(callRef, { name: name, ts: Date.now() });
+    ptName.value = '';
+  };
+
+  /* ===== ميكروفون (Arabic) ===== */
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new Speech();
+    rec.lang = 'ar-SA';
+    rec.interimResults = false;
+    rec.continuous = false;
+
+    rec.onresult = e => {
+      ptName.value = e.results[0][0].transcript;
+    };
+    rec.onerror = () => ptName.value = '';
+
+    micBtn.onmousedown = () => { rec.start(); recMsg.classList.remove('hidden'); };
+    micBtn.onmouseup   = () => { rec.stop();  recMsg.classList.add('hidden'); };
+    micBtn.onmouseleave = () => { rec.stop(); recMsg.classList.add('hidden'); };
+  } else {
+    micBtn.disabled = true;
+    micBtn.title = 'المتصفح لا يدعم التعرف الصوتي';
+  }
+</script>
+
+  
 </body>
 
 </html>
+
 
 
