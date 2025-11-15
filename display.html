@@ -87,23 +87,29 @@
     const container = document.getElementById('cards');
     let lastNumbers = {};
 
-    onValue(ref(db, 'clinics'), snap => {
-      container.innerHTML = '';
-      const data = snap.val() || {};
-      Object.keys(data).forEach(id => {
-        const { name, currentNumber } = data[id];
-        container.insertAdjacentHTML('beforeend', `
-          <div class="clinicCard p-4 flex items-center justify-between">
-            <h2 class="text-lg lg:text-xl font-bold text-[#2a3e48]">${name}</h2>
-            <p class="clinicNum font-extrabold">${currentNumber}</p>
-          </div>`);
+onValue(ref(db, 'clinics'), snap => {
+  container.innerHTML = '';
+  const data = snap.val() || {};
+  Object.keys(data).forEach(id => {
+    const { name, currentNumber } = data[id];
 
-        if (lastNumbers[id] !== undefined && lastNumbers[id] !== currentNumber) {
-          announce(name, currentNumber);
-        }
-        lastNumbers[id] = currentNumber;
-      });
-    });
+    // بناء البطاقة
+    const card = document.createElement('div');
+    card.className = 'clinicCard p-4 flex items-center justify-between';
+    card.dataset.id = id;   // للتعرف لاحقاً
+    card.innerHTML = `
+      <h2 class="text-lg lg:text-xl font-bold text-[#2a3e48]">${name}</h2>
+      <p class="clinicNum font-extrabold">${currentNumber}</p>
+    `;
+    container.appendChild(card);
+
+    /* النطق + التمييز عند التغيير */
+    if (lastNumbers[id] !== undefined && lastNumbers[id] !== currentNumber) {
+      announce(name, currentNumber, card);  // مرر العنصر
+    }
+    lastNumbers[id] = currentNumber;
+  });
+});
 
     /* ---------- اختياري: تبديل مصدر الفيديو ---------- */
     // مثال: تبديل إلى ملف محلى:
@@ -111,4 +117,5 @@
   </script>
 </body>
 </html>
+
 
