@@ -25,7 +25,7 @@ function numberFiles(n) {
   if (n === 0) return ['0.mp3'];
   if (n <= 10) return [`${n}.mp3`];
 
-  const ones = n % 10, tens = n - ones;
+  const ones = n % 10, tens = Math.floor(n / 10) * 10;
   const out = [];
   if (ones > 0) out.push(`${ones}.mp3`);
   if (CFG.wa && ones > 0 && tens > 0) out.push('wa.mp3');
@@ -44,18 +44,18 @@ async function runner() {
   playing = false;
 }
 
-/* ----------  speak عام  ---------- */
+/* ----------  main speak  ---------- */
 export function speak(text) {
   const list = [];
   if (text.startsWith('على العميل رقم')) {
-    list.push('prefix.mp3');
-    const n = Number(text.match(/\d+/)[0]);
-    list.push(...numberFiles(n));
+    list.push('prefix.mp3');                       // «على العميل رقم»
+    const n = Number(text.match(/\d+/)[0]);        // الرقم
+    list.push(...numberFiles(n));                  // الآحاد والعشرات
 
-    // استخراج ID العيادة من النص (نستخدمه لاحقاً)
-    const clinicId = text.match(/عيادة (\w+)/)?.[1];
-    if (clinicId) list.push(`clinic_${clinicId}.mp3`);
-    else list.push('suffix.mp3'); // fallback
+    // استخراج اسم العيادة (بعد «عيادة» أو «إلى»)
+    const m = text.match(/عيادة ([\w\u0600-\u06FF_]+)/) || text.match(/إلى ([\w\u0600-\u06FF_]+)/);
+    if (m) list.push(`clinic_${m[1]}.mp3`);        // «عيادة طب الأسرة»
+    else list.push('suffix.mp3');                  // fallback
   } else if (text === 'تمت إعادة التعيين') {
     list.push('reset.mp3');
   } else {
@@ -68,8 +68,7 @@ export function speak(text) {
 
 /* ----------  helpers (unchanged signature)  ---------- */
 export function announce(clinicName, num) {
-  // نمرر الـ ID من الاسم (مثلاً: "طب الأسرة" → "tb_alsea")
-  const id = clinicName.replace(/\s+/g, '_');
+  const id = clinicName.replace(/\s+/g, '_');      // استبدال المسافات بـ _
   speak(`على العميل رقم ${num} التوجه إلى عيادة ${id}`);
 }
 export function speakReset() {
