@@ -32,67 +32,70 @@
     </div>
   </div>
 
-  <script type="module">
-    import { onValue, ref } from "./js/firebase-config.js";
-    import { api } from "./js/api.js";
-    import { announce, speakReset } from "./js/tts.js";
+<!-- استدعاء القائمة + التحكم -->
+<script type="module">
+  import { onValue, ref } from "./js/firebase-config.js";
+  import { api } from "./js/api.js";
+  import { announce, speakReset } from "./js/tts.js";
 
-    let cid = null;
-    const sel = document.getElementById('sel'), 
-          panel = document.getElementById('panel'),
-          nameEl = document.getElementById('name'), 
-          numEl = document.getElementById('num');
+  let cid = null;
+  const sel = document.getElementById('sel'), 
+        panel = document.getElementById('panel'),
+        nameEl = document.getElementById('name'), 
+        numEl = document.getElementById('num');
 
-    // ملء القائمة لأول مرة
-    async function fillSel() {
-      sel.innerHTML = '<option value="" disabled selected>-- اختر عيادة --</option>';
-      (await api.getClinics()).forEach(c => 
-        sel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`)
-      );
+  // ملء القائمة لأول مرة
+  async function fillDropdown() {
+    sel.innerHTML = '<option value="" disabled selected>-- اختر عيادة --</option>';
+    const clinics = await api.getClinics();
+    clinics.forEach(c => 
+      sel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${c.name}</option>`)
+    );
+  }
+  fillDropdown();
+
+  // عند تغيير الاختيار
+  sel.addEventListener('change', async e => {
+    cid = e.target.value;
+    const c = await api.getClinic(cid);
+    if (!c) return;
+    nameEl.textContent = c.name; 
+    numEl.textContent = c.currentNumber;
+    panel.classList.remove('hidden');
+
+    // استماع مباشر لتغيير الرقم
+    onValue(ref(db, `clinics/${cid}/currentNumber`), s => 
+      numEl.textContent = s.val() ?? 0
+    );
+  });
+
+  // تنفيذ العملية + إعلان صوتي
+  async function fireAndAnnounce(action) {
+    if (!cid) return;
+    let c;
+    switch (action) {
+      case 'adv': c = await api.advanceNumber(cid); break;
+      case 'back': c = await api.goBackNumber(cid); break;
+      case 'set':
+        const v = document.getElementById('setInp').value;
+        if (v !== '') { await api.setNumber(cid, v); document.getElementById('setInp').value = ''; }
+        c = await api.getClinic(cid); break;
+      case 'reset':
+        await api.resetNumber(cid);
+        c = await api.getClinic(cid);
+        speakReset(); break;
+      default: return;
     }
-    fillSel();
+    if (!c) c = await api.getClinic(cid);
+    if (c && action !== 'reset') announce(c.name, c.currentNumber);
+  }
 
-    // عند تغيير الاختيار
-    sel.addEventListener('change', async e => {
-      cid = e.target.value;
-      const c = await api.getClinic(cid);
-      if (!c) return;
-      nameEl.textContent = c.name; 
-      numEl.textContent = c.currentNumber;
-      panel.classList.remove('hidden');
-
-      // استماع مباشر لتغيير الرقم
-      onValue(ref(db, `clinics/${cid}/currentNumber`), s => 
-        numEl.textContent = s.val() ?? 0
-      );
-    });
-
-    // تنفيذ العملية + إعلان صوتي
-    async function fireAndAnnounce(action) {
-      if (!cid) return;
-      let c;
-      switch (action) {
-        case 'adv': c = await api.advanceNumber(cid); break;
-        case 'back': c = await api.goBackNumber(cid); break;
-        case 'set':
-          const v = document.getElementById('setInp').value;
-          if (v !== '') { await api.setNumber(cid, v); document.getElementById('setInp').value = ''; }
-          c = await api.getClinic(cid); break;
-        case 'reset':
-          await api.resetNumber(cid);
-          c = await api.getClinic(cid);
-          speakReset(); break;
-        default: return;
-      }
-      if (!c) c = await api.getClinic(cid);
-      if (c && action !== 'reset') announce(c.name, c.currentNumber);
-    }
-
-    // أزرار التحكم
-    document.getElementById('adv').addEventListener('click', () => fireAndAnnounce('adv'));
-    document.getElementById('back').addEventListener('click', () => fireAndAnnounce('back'));
-    document.getElementById('setBtn').addEventListener('click', () => fireAndAnnounce('set'));
-    document.getElementById('reset').addEventListener('click', () => fireAndAnnounce('reset'));
-  </script>
+  // أزرار التحكم
+  document.getElementById('adv').addEventListener('click', () => fireAndAnnounce('adv'));
+  document.getElementById('back').addEventListener('click', () => fireAndAnnounce('back'));
+  document.getElementById('setBtn').addEventListener('click', () => fireAndAnnounce('set'));
+  document.getElementById('reset').addEventListener('click', () => fireAndAnnounce('reset'));
+</script>
 </body>
 </html>
+
