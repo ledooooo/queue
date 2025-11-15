@@ -67,12 +67,18 @@ export function speak(text) {
 }
 
 /* ----------  helpers (unchanged signature)  ---------- */
-export function announce(clinicName, num) {
-  const id = clinicName.replace(/\s+/g, '_');      // استبدال المسافات بـ _
-  speak(`على العميل رقم ${num} التوجه إلى عيادة ${id}`);
-}
-export function speakReset() {
-  speak('تمت إعادة التعيين');
+export async function announce(clinicName, num, cardElement = null) {
+  const id = clinicName.replace(/\s+/g, '_');
+  // تمييز البطاقة
+  if (cardElement) {
+    cardElement.classList.add('highlight', 'speaking');
+  }
+  // التشغيل (نفس الكود السابق)
+  await speak(`على العميل رقم ${num} التوجه إلى عيادة ${id}`);
+  // إزالة التمييز بعد الانتهاء
+  if (cardElement) {
+    cardElement.classList.remove('highlight', 'speaking');
+  }
 }
 
 /* ----------  بناء عنصر تحكم السرعة لصفحة admin  ---------- */
@@ -98,3 +104,4 @@ export function buildSpeedControl(parentId = 'adminSpeed') {
     alert('تم الحفظ – أعد تحميل الصفحة لتطبيق السرعة الجديدة');
   };
 }
+
