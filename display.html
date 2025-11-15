@@ -20,6 +20,13 @@
   <section id="topPanel" class="w-full p-4 overflow-y-auto">
     <h1 class="text-3xl md:text-4xl font-extrabold text-center text-[#004156] mb-4">الرقم الحالي</h1>
     <div id="cards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+
+    <!-- تحكم سرعة النطق -->
+    <div class="mt-4 max-w-md mx-auto bg-white p-3 rounded-xl shadow flex items-center gap-3">
+      <label class="text-sm font-bold text-[#004156]">سرعة النطق:</label>
+      <input id="speedRange" type="range" min="0.5" max="2" step="0.1" value="1" class="flex-1">
+      <span id="speedVal" class="text-sm w-10 text-center">1</span>
+    </div>
   </section>
 
   <!-- النصف السفلي: فيديو -->
@@ -77,4 +84,3 @@
   </script>
 </body>
 </html>
-
