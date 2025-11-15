@@ -17,6 +17,27 @@
       <input id="newInp" type="text" placeholder="اسم العيادة" class="w-full p-3 border rounded-lg">
       <button id="addBtn" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">أضف</button>
     </div>
+<!-- لوحة استدعاء مريض -->
+<div class="bg-white p-4 rounded-xl shadow mt-4 max-w-2xl mx-auto space-y-3">
+  <h3 class="font-bold text-[#004156]">استدعاء مريض</h3>
+
+  <!-- حقل الإدخال -->
+  <input id="ptName" type="text" placeholder="اسم المريض" dir="rtl"
+         class="w-full p-3 border rounded-lg text-lg">
+
+  <!-- أزرار التحكم -->
+  <div class="flex gap-2">
+    <button id="speakBtn" class="flex-1 py-2 bg-blue-700 text-white rounded hover:bg-blue-800">
+      نطق وعرض
+    </button>
+    <button id="micBtn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+      🎤
+    </button>
+  </div>
+
+  <!-- رسالة صغيرة -->
+  <p id="recMsg" class="text-xs text-gray-500 hidden">اضغط مطولاً على الميكروفون وتحدث بالعربية</p>
+</div>
 
     <!-- إدارة -->
     <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
@@ -66,3 +87,4 @@
 </body>
 
 </html>
+
