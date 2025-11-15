@@ -113,23 +113,22 @@
     });
 
     /* ---------- استماع لمسار currentClient (نص أو صوت) ---------- */
-    onValue(ref(db, 'currentClient'), async snap => {
-      if (!snap.exists()) return;
-      const val = snap.val();
-      if (val.name) {
-        // نص
-        const sentence = `على العميل ${val.name} التوجه إلى العيادة`;
-        phraseText.textContent = sentence;
-        announce('العيادة', 1); // نمرر اسم عام لإتمام النطق
-      } else if (val.audioURL) {
-        // صوت مسجل
-        phraseText.textContent = 'جاري تشغيل التسجيل...';
-        const audio = new Audio(val.audioURL);
-        audio.play().catch(() => {});
-        audio.onended = () => phraseText.textContent = '-- جاهز --';
-      }
-    });
+onValue(ref(db, 'currentClient'), async snap => {
+  if (!snap.exists()) return;
+  const val = snap.val();
+  if (val.name && val.clinic) {
+    const sentence = `على العميل ${val.name} التوجه إلى عيادة ${val.clinic}`;
+    phraseText.textContent = sentence;
+    announce(val.clinic, 1); // نمرر اسم العيادة لإتمام النطق
+  } else if (val.audioURL) {
+    phraseText.textContent = 'جاري تشغيل التسجيل...';
+    const audio = new Audio(val.audioURL);
+    audio.play().catch(() => {});
+    audio.onended = () => phraseText.textContent = '-- جاهز --';
+  }
+});
   </script>
 </body>
 </html>
+
 
