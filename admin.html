@@ -2,156 +2,163 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>إدارة العيادات</title>
+  <title>صفحة المدير - مركز غرب المطار</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <style>body{font-family:'Tajawal',sans-serif;background:#d0e6f2}</style>
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background: #d0e6f2; }
+    .card { background: #ffffff; border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,.08); }
+    .highlight { background: #fef3c7 !important; animation: blink 0.6s ease-in-out 4; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.4;}}
+  </style>
 </head>
 <body class="min-h-screen p-6">
 
-  <h1 class="text-3xl font-bold text-center text-[#004156] mb-6">إدارة العيادات</h1>
-
-  <!-- جزء إدخال اسم العميل -->
-  <div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow-xl mb-6 space-y-4">
-    <h2 class="text-xl font-bold text-[#004156]">إدخال اسم العميل</h2>
-
-    <!-- حقل نص -->
-    <input id="clientName" type="text" placeholder="اسم العميل" class="w-full p-3 border rounded-lg text-lg">
-    <!-- اختيار العيادة من قائمة منسدلة -->
-    <select id="clinicSelect" class="w-full p-3 border rounded-lg text-lg">
-      <option value="" disabled selected>-- اختر عيادة --</option>
-    </select>
-
-    <!-- أزرار التحكم -->
-    <div class="flex gap-3">
-      <button id="sendBtn" class="flex-1 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">إرسال وعرض</button>
-      <button id="micBtn"  class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">🎤 تسجيل صوتي</button>
-    </div>
-
-    <!-- رسالة حالة -->
-    <p id="statusMsg" class="text-sm text-gray-600 text-center"></p>
+  <!-- ================== قسم الدخول (يختفي بعد التحقق) ================== -->
+  <div id="loginSection" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl">
+    <h1 class="text-3xl font-bold text-center text-[#004156] mb-6">صفحة المدير</h1>
+    <input id="adminPassword" type="password" placeholder="كلمة مرور الصفحة" class="w-full p-3 border rounded-lg text-lg mb-4">
+    <button id="loginBtn" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">دخول</button>
+    <p id="loginError" class="text-sm text-red-600 text-center mt-2 hidden">كلمة المرور خاطئة</p>
   </div>
 
-  <!-- باقي أقسام الإدارة (إضافة/حذف/تسمية العيادات) -->
-  <div class="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
-      <h2 class="text-xl font-bold text-[#004156]">إضافة عيادة جديدة</h2>
-      <input id="newInp" type="text" placeholder="اسم العيادة" class="w-full p-3 border rounded-lg">
-      <button id="addBtn" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">أضف</button>
+  <!-- ================== المحتوى الرئيسى (يُخفى حتى يدخل المدير) ================== -->
+  <div id="mainContent" class="hidden space-y-8">
+
+    <!-- عنوان الصفحة -->
+    <h1 class="text-4xl font-extrabold text-center text-[#004156]">مركز غرب المطار - لوحة المدير</h1>
+
+    <!-- قسم إضافة/تعديل عيادة -->
+    <div class="max-w-4xl mx-auto card p-6 space-y-4">
+      <h2 class="text-2xl font-bold text-[#004156]">إضافة / تعديل عيادة</h2>
+      <input id="newClinicName" type="text" placeholder="اسم العيادة" class="w-full p-3 border rounded-lg text-lg">
+      <input id="newClinicPassword" type="password" placeholder="كلمة مرور العيادة" class="w-full p-3 border rounded-lg text-lg">
+      <div class="flex gap-3">
+        <button id="addClinicBtn" class="flex-1 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">أضف</button>
+        <button id="saveClinicBtn" class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 hidden">حفظ التعديل</button>
+      </div>
+      <p id="clinicMsg" class="text-sm text-gray-600 text-center"></p>
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
-      <h2 class="text-xl font-bold text-[#004156]">العيادات الحالية</h2>
-      <ul id="list" class="space-y-3"></ul>
+    <!-- زر إعادة تعيين جميع العيادات -->
+    <div class="max-w-4xl mx-auto text-center">
+      <button id="resetAllBtn" class="py-3 px-6 bg-red-600 text-white rounded-lg hover:bg-red-700">إعادة تعيين جميع العيادات</button>
     </div>
+
+    <!-- قائمة العيادات مع التحكم فى الأرقام -->
+    <div class="max-w-4xl mx-auto card p-6 space-y-4">
+      <h2 class="text-2xl font-bold text-[#004156]">العيادات الحالية</h2>
+      <ul id="clinicsList" class="space-y-4"></ul>
+    </div>
+
+    <!-- عنصر تحكم السرعة -->
+    <div id="adminSpeed" class="max-w-4xl mx-auto"></div>
+
   </div>
-
-  <!-- عنصر تحكم السرعة -->
-  <div id="adminSpeed" class="max-w-3xl mx-auto mt-6"></div>
 
   <script type="module">
     import { db, ref, get, set, update, remove, onValue, push } from "./js/firebase-config.js";
     import { buildSpeedControl } from "./js/tts.js";
 
-    /* ---------- إدارة العيادات (كما كان) ---------- */
-    const api = {
-      getClinics: async () => {
-        const s = await get(ref(db, "clinics"));
-        const d = s.val() || {};
-        return Object.keys(d).map(id => ({ id, ...d[id] }));
-      },
-      addClinic: async name => {
-        const r = push(ref(db, "clinics"));
-        const c = { id: r.key, name, currentNumber: 0 };
-        await set(r, c);
-        return c;
-      },
-      renameClinic: (id, n) => update(ref(db, `clinics/${id}`), { name: n }),
-      deleteClinic: id => remove(ref(db, `clinics/${id}`)),
-    };
+    /* ================== متغيرات الصفحة ================== */
+    const loginSection   = document.getElementById('loginSection');
+    const mainContent    = document.getElementById('mainContent');
+    const adminPassword  = document.getElementById('adminPassword');
+    const loginBtn       = document.getElementById('loginBtn');
+    const loginError     = document.getElementById('loginError');
 
-    async function render() {
-      const list = document.getElementById('list');
-      list.innerHTML = '';
-      const clinics = await api.getClinics();
-      if (!clinics.length) { list.innerHTML = '<li class="text-gray-500">لا توجد عيادات</li>'; return; }
-      clinics.forEach(({id, name}) => list.insertAdjacentHTML('beforeend', `
-        <li class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <span class="font-bold text-lg text-[#2a3e48]">${name}</span>
-          <div class="flex gap-2">
-            <input type="text" class="renameInp px-3 py-1 border rounded" placeholder="اسم جديد" data-id="${id}">
-            <button class="renameBtn px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-800" data-id="${id}">تسمية</button>
-            <button class="delBtn px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700" data-id="${id}">حذف</button>
-          </div>
-        </li>`));
-    }
-    render();
+    const newClinicName     = document.getElementById('newClinicName');
+    const newClinicPassword = document.getElementById('newClinicPassword');
+    const addClinicBtn      = document.getElementById('addClinicBtn');
+    const saveClinicBtn     = document.getElementById('saveClinicBtn');
+    const clinicsList       = document.getElementById('clinicsList');
+    const resetAllBtn       = document.getElementById('resetAllBtn');
 
-    document.getElementById('addBtn').addEventListener('click', async () => {
-      const v = document.getElementById('newInp').value.trim();
-      if (v) { await api.addClinic(v); document.getElementById('newInp').value = ''; render(); }
-    });
+    let editingId = null; // لتتبع العيادة المُعدَّلة
 
-    document.getElementById('list').addEventListener('click', async e => {
-      const id = e.target.dataset.id;
-      if (!id) return;
-      if (e.target.classList.contains('delBtn')) { if (confirm('متأكد من الحذف؟')) { await api.deleteClinic(id); render(); } }
-      if (e.target.classList.contains('renameBtn')) {
-        const inp = e.target.parentElement.querySelector(`.renameInp[data-id="${id}"]`), v = inp.value.trim();
-        if (v) { await api.renameClinic(id, v); inp.value = ''; render(); }
+    const ADMIN_PASS = 'admin123'; // غيّرها لكلمة مرور الصفحة الخاصة بك
+
+    /* ================== دخول المدير ================== */
+    loginBtn.addEventListener('click', () => {
+      if (adminPassword.value.trim() === ADMIN_PASS) {
+        loginSection.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        buildSpeedControl();
+        renderClinics(); // عرض العيادات
+      } else {
+        loginError.classList.remove('hidden');
       }
     });
 
-    /* ---------- ملء قائمة العيادات لحظياً ---------- */
-    const clinicSelect = document.getElementById('clinicSelect');
-    onValue(ref(db, 'clinics'), snap => {
-      clinicSelect.innerHTML = '<option value="" disabled selected>-- اختر عيادة --</option>';
+    /* ================== إضافة عيادة جديدة ================== */
+    addClinicBtn.addEventListener('click', async () => {
+      const name = newClinicName.value.trim();
+      const pass = newClinicPassword.value.trim();
+      if (!name || !pass) { alert('أكمل الحقول أولاً'); return; }
+
+      const r = push(ref(db, 'clinics'));
+      await set(r, { name: name, password: pass, currentNumber: 0 });
+      newClinicName.value = '';
+      newClinicPassword.value = '';
+      renderClinics();
+    });
+
+    /* ================== عرض العيادات مع التحكم ================== */
+    async function renderClinics() {
+      const snap = await get(ref(db, 'clinics'));
+      clinicsList.innerHTML = '';
+      if (!snap.exists()) { clinicsList.innerHTML = '<li class="text-gray-500">لا توجد عيادات</li>'; return; }
+
       snap.forEach(ch => {
-        const {name} = ch.val();
-        clinicSelect.insertAdjacentHTML('beforeend', `<option value="${name}">${name}</option>`);
+        const {name, password, currentNumber} = ch.val();
+        const id = ch.key;
+
+        clinicsList.insertAdjacentHTML('beforeend', `
+          <li class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-4 rounded-xl">
+            <!-- اسم العيادة -->
+            <div>
+              <h3 class="text-xl font-bold text-[#2a3e48]">${name}</h3>
+              <p class="text-sm text-gray-600">كلمة المرور: ${password}</p>
+            </div>
+
+            <!-- التحكم فى الرقم -->
+            <div class="flex items-center gap-3">
+              <span class="text-2xl font-extrabold text-[#004156]">${currentNumber}</span>
+              <button onclick="setSpecificNumber('${id}', ${currentNumber})" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">ضبط رقم</button>
+              <button onclick="resetClinic('${id}')" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">إعادة تعيين</button>
+            </div>
+          </li>`);
       });
+    }
+
+    /* ================== وظائف التحكم ================== */
+    window.resetClinic = async (id) => {
+      if (!confirm('متأكد من إعادة تعيين الرقم؟')) return;
+      await update(ref(db, `clinics/${id}`), { currentNumber: 0 });
+      renderClinics();
+    };
+
+    window.setSpecificNumber = async (id, oldNumber) => {
+      const newNumber = prompt(`ضع رقمًا جديدًا (الحالي: ${oldNumber})`, oldNumber);
+      if (newNumber === null) return;
+      const n = parseInt(newNumber, 10);
+      if (isNaN(n) || n < 0) { alert('رقم غير صحيح'); return; }
+      await update(ref(db, `clinics/${id}`), { currentNumber: n });
+      renderClinics();
+    };
+
+    /* ================== إعادة تعيين جميع العيادات مرة واحدة ================== */
+    resetAllBtn.addEventListener('click', async () => {
+      if (!confirm('متأكد من إعادة تعيين جميع الأرقام إلى صفر؟')) return;
+      const snap = await get(ref(db, 'clinics'));
+      snap.forEach(async ch => {
+        await update(ref(db, `clinics/${ch.key}`), { currentNumber: 0 });
+      });
+      renderClinics();
     });
 
-    /* ---------- إدخال اسم العميل (نص أو تسجيل صوتي) + إرساله إلى currentClient ---------- */
-    const clientInp   = document.getElementById('clientName');
-    const sendBtn     = document.getElementById('sendBtn');
-    const micBtn      = document.getElementById('micBtn');
-    const statusMsg   = document.getElementById('statusMsg');
-
-    // إرسال نص + العيادة المختارة
-    sendBtn.addEventListener('click', () => {
-      const name = clientInp.value.trim();
-      const clinic = clinicSelect.value;
-      if (!name || !clinic) { statusMsg.textContent = 'أكمل الحقول أولاً'; return; }
-      set(ref(db, 'currentClient'), { name: name, clinic: clinic, timestamp: Date.now() });
-      statusMsg.textContent = 'تم الإرسال وعرضه على الشاشة';
-      clientInp.value = '';
-      clinicSelect.selectedIndex = 0;
-    });
-
-    // تسجيل صوتي
-    let mediaRecorder;
-    let audioChunks = [];
-    micBtn.addEventListener('click', async () => {
-      if (!navigator.mediaDevices) { statusMsg.textContent = 'المتصفح لا يدعم الميكروفون'; return; }
-      statusMsg.textContent = 'جاري التسجيل... اضغط مرة أخرى للإيقاف';
-      if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); return; }
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-      audioChunks = [];
-      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const url = URL.createObjectURL(audioBlob);
-        set(ref(db, 'currentClient'), { audioURL: url, timestamp: Date.now() });
-        statusMsg.textContent = 'تم التسجيل وإرساله';
-        stream.getTracks().forEach(t => t.stop());
-      };
-      mediaRecorder.start();
-    });
-
-    /* ---------- عنصر تحكم السرعة ---------- */
-    buildSpeedControl();
+    /* ================== أول تحميل ================== */
+    renderClinics();
   </script>
 </body>
 </html>
