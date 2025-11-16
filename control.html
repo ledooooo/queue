@@ -7,17 +7,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Tajawal', sans-serif; background: #d0e6f2; }
-    .clinicCard { background: #ffffff; border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,.08); transition: background 0.4s; }
+    .card { background: #ffffff; border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,.08); }
     .highlight { background: #fef3c7 !important; animation: blink 0.6s ease-in-out 4; }
     @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.4;}}
-    /* أزرار الأسهم + إعادة النطق */
-    .arrowBtn  { background: #0288d1; color: white; border-radius: 50%; width: 4rem; height: 4rem; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; transition: background 0.3s; }
-    .arrowBtn:hover { background: #0269a4; }
-    .repeatBtn { background: #0288d1; color: white; border-radius: 50%; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: background 0.3s; }
-    .repeatBtn:hover { background: #0269a4; }
   </style>
 </head>
 <body class="min-h-screen p-6">
+
+  <h1 class="text-3xl font-bold text-center text-[#004156] mb-6">لوحة التحكم</h1>
 
   <!-- اختيار العيادة + كلمة المرور -->
   <div class="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-xl mb-6 space-y-4">
@@ -36,18 +33,30 @@
     <h2 id="clinicName" class="text-3xl font-bold text-center text-[#004156]"></h2>
     <p id="clinicNumber" class="text-7xl font-extrabold text-center text-[#2a3e48]"></p>
 
-    <!-- أزرار التحكم (أسهم + إعادة النطق) -->
+    <!-- أزرار التحكم مع الأشكال والأسهم -->
     <div class="flex items-center justify-center gap-4">
-      <!-- سهم رجوع -->
-      <button id="back" class="arrowBtn" title="رجوع">←</button>
 
-      <!-- زر إعادة النطق -->
-      <button id="repeat" class="repeatBtn" title="إعادة النطق">🔊</button>
+      <!-- السابق + سهم -->
+      <button id="back" class="flex items-center gap-2 px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-800">
+        <span>⬅</span>
+        <span>السابق</span>
+      </button>
 
-      <!-- سهم تقدم -->
-      <button id="adv" class="arrowBtn" title="تقدم">→</button>
+      <!-- تكرار + شكل -->
+      <button id="repeatBtn" class="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+        <span>🔄</span>
+        <span>تكرار</span>
+      </button>
+
+      <!-- التالي + سهم -->
+      <button id="adv" class="flex items-center gap-2 px-6 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">
+        <span>التالي</span>
+        <span>➡</span>
+      </button>
+
     </div>
 
+    <!-- تعيين رقم معين -->
     <div class="flex gap-2">
       <input id="setInp" type="number" min="0" placeholder="رقم جديد" class="flex-1 p-3 border rounded-lg text-center">
       <button id="setBtn" class="px-6 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">تعيين</button>
@@ -59,7 +68,7 @@
   </div>
 
   <script type="module">
-    import { db, ref, get, update, onValue } from "./js/firebase-config.js";
+    import { db, ref, get, update, onValue, push } from "./js/firebase-config.js";
     import { announce, buildSpeedControl } from "./js/tts.js";
 
     /* ---------- متغيرات الصفحة ---------- */
@@ -104,7 +113,7 @@
       document.querySelector('.max-w-2xl.mx-auto.bg-white.p-6.rounded-2xl.shadow-xl.mb-6').classList.add('hidden');
       controlPanel.classList.remove('hidden');
       buildSpeedControl();
-      listenToClinic();
+      listenToClinic(); // استماع لحقل currentNumber فقط
     });
 
     /* ---------- استماع لحقل currentNumber فقط (للعيادة المختارة) ---------- */
@@ -115,94 +124,121 @@
       });
     }
 
-    /* ---------- أزرار التحكم فى الرقم + إعادة النطق ---------- */
+    /* ---------- أزرار التحكم فى الرقم + زر تكرار + زر تعيين + نطق + إعادة تعيين ---------- */
     const api = {
       advanceNumber: async () => {
         const nn = (currentClinic.currentNumber || 0) + 1;
         await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: nn });
         currentClinic.currentNumber = nn;
+        announce(currentClinic.name, currentClinic.currentNumber);
       },
       goBackNumber: async () => {
         const nn = Math.max(0, (currentClinic.currentNumber || 0) - 1);
         await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: nn });
         currentClinic.currentNumber = nn;
+        announce(currentClinic.name, currentClinic.currentNumber);
       },
       setNumber: async (v) => {
         const n = parseInt(v, 10);
         if (!isNaN(n) && n >= 0) {
           await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: n });
           currentClinic.currentNumber = n;
+          announce(currentClinic.name, currentClinic.currentNumber);
         }
       },
       resetNumber: async () => {
         await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: 0 });
         currentClinic.currentNumber = 0;
+        announce(currentClinic.name, currentClinic.currentNumber);
       }
     };
 
-    /* ---------- أزرار التحكم + إعادة النطق ---------- */
-    document.getElementById('adv').addEventListener('click', async () => {
-      await api.advanceNumber();
+    /* ---------- أزرار التحكم + زر تكرار + زر تعيين + نطق + إعادة تعيين ---------- */
+    const clientInp   = document.getElementById('clientName');
+    const sendBtn     = document.getElementById('sendBtn');
+    const micBtn      = document.getElementById('micBtn');
+    const statusMsg   = document.getElementById('statusMsg');
+    const repeatBtn   = document.getElementById('repeatBtn');
+
+    // أزرار التحكم الأساسية
+    document.getElementById('adv').addEventListener('click', () => api.advanceNumber());
+    document.getElementById('back').addEventListener('click', () => api.goBackNumber());
+    document.getElementById('setBtn').addEventListener('click', () => api.setNumber(document.getElementById('setInp').value));
+    document.getElementById('reset').addEventListener('click', () => api.resetNumber());
+
+    // زر تكرار (يعيد نطق الرقم الحالي)
+    repeatBtn.addEventListener('click', () => {
       announce(currentClinic.name, currentClinic.currentNumber);
     });
 
-    document.getElementById('back').addEventListener('click', async () => {
-      await api.goBackNumber();
-      announce(currentClinic.name, currentClinic.currentNumber);
+    // إرسال اسم العميل
+    sendBtn.addEventListener('click', () => {
+      const name = clientInp.value.trim();
+      if (!name) { statusMsg.textContent = 'أدخل اسم العميل أولاً'; return; }
+      set(ref(db, 'currentClient'), { name: name, clinic: currentClinic.name, timestamp: Date.now() });
+      statusMsg.textContent = 'تم الإرسال وعرضه على الشاشة';
+      clientInp.value = '';
     });
 
-    document.getElementById('repeat').addEventListener('click', () => {
-      // إعادة نطق الرقم الحالي فقط (بدون الجملة الكاملة)
-      speak(currentClinic.currentNumber.toString());
+    // تسجيل صوتي
+    let mediaRecorder;
+    let audioChunks = [];
+    micBtn.addEventListener('click', async () => {
+      if (!navigator.mediaDevices) { statusMsg.textContent = 'المتصفح لا يدعم الميكروفون'; return; }
+      statusMsg.textContent = 'جاري التسجيل... اضغط مرة أخرى للإيقاف';
+      if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); return; }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const url = URL.createObjectURL(audioBlob);
+        set(ref(db, 'currentClient'), { audioURL: url, clinic: currentClinic.name, timestamp: Date.now() });
+        statusMsg.textContent = 'تم التسجيل وإرساله';
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRecorder.start();
     });
 
-    document.getElementById('setBtn').addEventListener('click', async () => {
-      const v = document.getElementById('setInp').value;
-      if (v !== '') { await api.setNumber(v); document.getElementById('setInp').value = ''; }
-    });
-
-    document.getElementById('reset').addEventListener('click', async () => {
-      await api.resetNumber();
-      announce(currentClinic.name, currentClinic.currentNumber);
-    });
-
-    /* ---------- مشغل متسلسل (فيديو + صور) من مجلد media/ على GitHub ---------- */
+    /* ---------- مشغل متسلسل (فيديو + صور) ---------- */
     const mediaBase = 'https://raw.githubusercontent.com/ledooooo/queue/main/media/'; // غيّرها لرابطك
-    // أو لو على نفس السيرفر: const mediaBase = './media/';
-
-    const playlist = [
-      '1.mp4', '2.jpg', '3.mp4', '4.png' // اكتب أسماء ملفاتك بالترتيب هنا
-    ];
-
+    const playlist = ['1.mp4', '2.jpg', '3.mp4', '4.png']; // اكتب أسماء ملفاتك
     let current = 0;
     const player = document.getElementById('seqPlayer');
     const image  = document.getElementById('seqImage');
 
-    function playNext() {
-      current = (current + 1) % playlist.length;
-      loadMedia();
-    }
-
+    function playNext() { current = (current + 1) % playlist.length; loadMedia(); }
     function loadMedia() {
       const src = mediaBase + playlist[current];
       const isVideo = /\.(mp4|webm|ogg)$/i.test(playlist[current]);
-
       if (isVideo) {
-        image.classList.add('hidden');
-        player.classList.remove('hidden');
-        player.src = src;
-        player.play().catch(() => {});
+        image.classList.add('hidden'); player.classList.remove('hidden');
+        player.src = src; player.play().catch(() => {});
       } else {
-        player.classList.add('hidden');
-        image.classList.remove('hidden');
-        image.src = src;
-        setTimeout(playNext, 4000);
+        player.classList.add('hidden'); image.classList.remove('hidden');
+        image.src = src; setTimeout(playNext, 4000);
       }
     }
-
-    player.addEventListener('ended', playNext);
-    player.addEventListener('error', playNext);
+    player.addEventListener('ended', playNext); player.addEventListener('error', playNext);
     loadMedia();
+
+    /* ---------- عرض اسم المكان + التاريخ والساعة الحية ---------- */
+    function updateDateTime() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const timeStr = now.toLocaleTimeString('ar-EG');
+      // نضيفها فى أعلى الصفحة (يمكنك وضعها أينما تريد)
+      if (!document.getElementById('dateTime')) {
+        const div = document.createElement('div');
+        div.id = 'dateTime';
+        div.className = 'text-center text-sm text-[#004156] mb-4';
+        document.body.insertBefore(div, document.body.firstChild);
+      }
+      document.getElementById('dateTime').textContent = `مركز غرب المطار - ${dateStr} - ${timeStr}`;
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
   </script>
 </body>
 </html>
