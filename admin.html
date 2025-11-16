@@ -42,4 +42,156 @@
   </div>
 
   <!-- أقسام الإدارة (تظهر بعد الدخول) -->
-  <div id="adminSections" class
+  <div id="adminSections" class="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
+    <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
+      <h2 class="text-xl font-bold text-[#004156]">إضافة عيادة جديدة</h2>
+      <input id="newInp" type="text" placeholder="اسم العيادة" class="w-full p-3 border rounded-lg">
+      <button id="addBtn" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">أضف</button>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-xl space-y-4">
+      <h2 class="text-xl font-bold text-[#004156]">العيادات الحالية</h2>
+      <ul id="list" class="space-y-3"></ul>
+    </div>
+  </div>
+
+  <!-- عنصر تحكم السرعة -->
+  <div id="adminSpeed" class="max-w-3xl mx-auto mt-6 hidden"></div>
+
+  <script type="module">
+    import { db, ref, get, set, update, remove, onValue, push } from "./js/firebase-config.js";
+    import { buildSpeedControl } from "./js/tts.js";
+
+    /* ---------- متغيرات الصفحة ---------- */
+    const clinicSelect = document.getElementById('clinicSelect');
+    const passwordInp  = document.getElementById('passwordInp');
+    const loginBtn     = document.getElementById('loginBtn');
+    const errorMsg     = document.getElementById('errorMsg');
+    const controlSection = document.getElementById('controlSection');
+    const adminSections  = document.getElementById('adminSections');
+
+    let currentClinic = null; // بيانات العيادة المختارة بعد الدخول
+
+    /* ---------- ملء قائمة العيادات + استماع التغييرات ---------- */
+    onValue(ref(db, 'clinics'), snap => {
+      clinicSelect.innerHTML = '<option value="" disabled selected>-- اختر عيادة --</option>';
+      snap.forEach(ch => {
+        const {name} = ch.val();
+        clinicSelect.insertAdjacentHTML('beforeend', `<option value="${ch.key}">${name}</option>`);
+      });
+    });
+
+    /* ---------- عند اختيار عيادة: أظهر حقل كلمة المرور ---------- */
+    clinicSelect.addEventListener('change', () => {
+      passwordInp.classList.remove('hidden');
+      loginBtn.classList.remove('hidden');
+      errorMsg.classList.add('hidden');
+    });
+
+    /* ---------- زر الدخول: التحقق من كلمة المرور ---------- */
+    loginBtn.addEventListener('click', async () => {
+      const clinicId = clinicSelect.value;
+      const pass     = passwordInp.value.trim();
+      if (!clinicId || !pass) { errorMsg.textContent = 'أكمل الحقول أولاً'; errorMsg.classList.remove('hidden'); return; }
+
+      const clinicSnap = await get(ref(db, `clinics/${clinicId}`));
+      if (!clinicSnap.exists()) { errorMsg.textContent = 'العيادة غير موجودة'; errorMsg.classList.remove('hidden'); return; }
+
+      const clinic = clinicSnap.val();
+      if (clinic.password !== pass) { errorMsg.textContent = 'كلمة المرور خاطئة'; errorMsg.classList.remove('hidden'); return; }
+
+      // دخول ناجح: أخفى حقول الدخول وأظهر أقسام التحكم
+      currentClinic = { id: clinicId, ...clinic };
+      document.querySelector('.max-w-3xl.mx-auto.bg-white.p-6.rounded-2xl.shadow-xl.mb-6').classList.add('hidden');
+      controlSection.classList.remove('hidden');
+      adminSections.classList.remove('hidden');
+      buildSpeedControl();
+      render(); // عرض بيانات العيادة
+    });
+
+    /* ---------- إدارة العيادة (تحكم فى الرقم فقط) ---------- */
+    const api = {
+      getClinic: async () => {
+        const s = await get(ref(db, `clinics/${currentClinic.id}`));
+        return s.exists() ? s.val() : null;
+      },
+      advanceNumber: async () => {
+        const c = await api.getClinic();
+        if (!c) return null;
+        const nn = (c.currentNumber || 0) + 1;
+        await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: nn });
+        return { ...c, currentNumber: nn };
+      },
+      goBackNumber: async () => {
+        const c = await api.getClinic();
+        if (!c) return null;
+        const nn = Math.max(0, (c.currentNumber || 0) - 1);
+        await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: nn });
+        return { ...c, currentNumber: nn };
+      },
+      setNumber: async (v) => {
+        const n = parseInt(v, 10);
+        if (!isNaN(n) && n >= 0) await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: n });
+      },
+      resetNumber: async () => update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: 0 })
+    };
+
+    async function render() {
+      const c = await api.getClinic();
+      if (!c) return;
+      document.getElementById('list').innerHTML = `
+        <li class="flex items-center justify-between bg-gray-100 p-4 rounded-xl">
+          <span class="font-bold text-lg text-[#2a3e48]">${c.name}</span>
+          <p class="text-3xl font-extrabold text-[#004156]">${c.currentNumber}</p>
+        </li>`;
+    }
+
+    /* ---------- أزرار التحكم فى الرقم + إدخال اسم العميل + تسجيل صوتي ---------- */
+    const clientInp   = document.getElementById('clientName');
+    const sendBtn     = document.getElementById('sendBtn');
+    const micBtn      = document.getElementById('micBtn');
+    const statusMsg   = document.getElementById('statusMsg');
+
+    // أزرار التحكم
+    document.getElementById('adv').addEventListener('click', async () => { await api.advanceNumber(); render(); });
+    document.getElementById('back').addEventListener('click', async () => { await api.goBackNumber(); render(); });
+    document.getElementById('setBtn').addEventListener('click', async () => {
+      const v = document.getElementById('setInp').value;
+      if (v !== '') { await api.setNumber(v); document.getElementById('setInp').value = ''; } render();
+    });
+    document.getElementById('reset').addEventListener('click', async () => { await api.resetNumber(); render(); });
+
+    // إرسال اسم العميل
+    sendBtn.addEventListener('click', () => {
+      const name = clientInp.value.trim();
+      if (!name) { statusMsg.textContent = 'أدخل اسم العميل أولاً'; return; }
+      set(ref(db, 'currentClient'), { name: name, clinic: currentClinic.name, timestamp: Date.now() });
+      statusMsg.textContent = 'تم الإرسال وعرضه على الشاشة';
+      clientInp.value = '';
+    });
+
+    // تسجيل صوتي
+    let mediaRecorder;
+    let audioChunks = [];
+    micBtn.addEventListener('click', async () => {
+      if (!navigator.mediaDevices) { statusMsg.textContent = 'المتصفح لا يدعم الميكروفون'; return; }
+      statusMsg.textContent = 'جاري التسجيل... اضغط مرة أخرى للإيقاف';
+      if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); return; }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const url = URL.createObjectURL(audioBlob);
+        set(ref(db, 'currentClient'), { audioURL: url, clinic: currentClinic.name, timestamp: Date.now() });
+        statusMsg.textContent = 'تم التسجيل وإرساله';
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRecorder.start();
+    });
+
+    /* ---------- عنصر تحكم السرعة ---------- */
+    buildSpeedControl();
+  </script>
+</body>
+</html>
