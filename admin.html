@@ -28,13 +28,16 @@
     <!-- عنوان الصفحة -->
     <h1 class="text-4xl font-extrabold text-center text-[#004156]">مركز غرب المطار - لوحة المدير</h1>
 
-    <!-- قسم إضافة عيادة جديدة -->
+    <!-- قسم إضافة/تعديل عيادة -->
     <div class="max-w-4xl mx-auto card p-6 space-y-4">
-      <h2 class="text-2xl font-bold text-[#004156]">إضافة عيادة جديدة</h2>
+      <h2 class="text-2xl font-bold text-[#004156]">إضافة / تعديل عيادة</h2>
       <input id="newClinicName" type="text" placeholder="اسم العيادة" class="w-full p-3 border rounded-lg text-lg">
       <input id="newClinicPassword" type="password" placeholder="كلمة مرور العيادة" class="w-full p-3 border rounded-lg text-lg">
-      <button id="addClinicBtn" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">أضف</button>
-      <p id="addMsg" class="text-sm text-gray-600 text-center"></p>
+      <div class="flex gap-3">
+        <button id="addClinicBtn" class="flex-1 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">أضف</button>
+        <button id="saveClinicBtn" class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 hidden">حفظ التعديل</button>
+      </div>
+      <p id="clinicMsg" class="text-sm text-gray-600 text-center"></p>
     </div>
 
     <!-- زر إعادة تعيين جميع العيادات -->
@@ -42,7 +45,7 @@
       <button id="resetAllBtn" class="py-3 px-6 bg-red-600 text-white rounded-lg hover:bg-red-700">إعادة تعيين جميع العيادات</button>
     </div>
 
-    <!-- قائمة العيادات مع حقول التعديل و التحكم -->
+    <!-- قائمة العيادات مع التحكم فى الأرقام -->
     <div class="max-w-4xl mx-auto card p-6 space-y-4">
       <h2 class="text-2xl font-bold text-[#004156]">العيادات الحالية</h2>
       <ul id="clinicsList" class="space-y-4"></ul>
@@ -144,15 +147,6 @@
       renderClinics();
     };
 
-    window.resetClinic = async (id) => {
-      if (!confirm('متأكد من إعادة تعيين الرقم؟')) return;
-      await update(ref(db, `clinics/${id}`), { currentNumber: 0 });
-      // تنطيق "تمت إعادة التعيين" من ملف reset.mp3
-      const audio = new Audio('audio/reset.mp3');
-      audio.play().catch(() => {});
-      renderClinics();
-    };
-
     window.setSpecificNumber = async (id, oldNumber) => {
       const newNumber = prompt(`ضع رقمًا جديدًا (الحالي: ${oldNumber})`, oldNumber);
       if (newNumber === null) return;
@@ -162,10 +156,20 @@
       renderClinics();
     };
 
+    window.resetClinic = async (id) => {
+      if (!confirm('متأكد من إعادة تعيين الرقم؟')) return;
+      await update(ref(db, `clinics/${id}`), { currentNumber: 0 });
+      // تنطيق "تمت إعادة التعيين" من ملف reset.mp3
+      const audio = new Audio('audio/reset.mp3');
+      audio.play().catch(() => {});
+      renderClinics();
+    };
+
     /* ================== إعادة تعيين جميع العيادات مرة واحدة ================== */
     resetAllBtn.addEventListener('click', async () => {
       if (!confirm('متأكد من إعادة تعيين جميع الأرقام إلى صفر؟')) return;
       const snap = await get(ref(db, 'clinics'));
+      // ✅ استخدم forEach مباشرة على الـ Snap لضمان تنفيذ جميع التحديثات
       snap.forEach(async ch => {
         await update(ref(db, `clinics/${ch.key}`), { currentNumber: 0 });
       });
