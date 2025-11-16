@@ -147,9 +147,14 @@
         }
       },
       resetNumber: async () => {
+        // 1- نعيد الرقم إلى صفر
         await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: 0 });
         currentClinic.currentNumber = 0;
-        announce(currentClinic.name, currentClinic.currentNumber);
+        // 2- ننطق ملف reset.mp3 (بدون جملة العميل)
+        const audio = new Audio('audio/reset.mp3');
+        audio.play().catch(() => {});
+        // 3- ننطق الجملة بعد انتهاء الملف (اختياري)
+        audio.onended = () => announce(currentClinic.name, 0);
       }
     };
 
@@ -179,9 +184,10 @@
     document.getElementById('setBtn').addEventListener('click', () => api.setNumber(document.getElementById('setInp').value));
     document.getElementById('reset').addEventListener('click', () => api.resetNumber());
 
-    // زر تكرار (Debounced لمنع التكرار المتسارع)
-    repeatBtn.addEventListener('click', debounce(() => {
+    // زر تكرار (Debounced لمنع التكرار المتسارع) + يحدث الرقم نفسه فى قاعدة البيانات → يحدث صفحة العرض
+    repeatBtn.addEventListener('click', debounce(async () => {
       // نكرر النطق ونحدث الرقم نفسه فى قاعدة البيانات (يُحدث صفحة العرض)
+      await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: currentClinic.currentNumber });
       announce(currentClinic.name, currentClinic.currentNumber);
     }, 600)); // 600 مللى ثانية بين كل ضغطة
 
