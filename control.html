@@ -5,28 +5,28 @@
   <title>لوحة التحكم</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <style>body{font-family:'Tajawal',sans-serif;background:#d0e6f2}</style>
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background: #d0e6f2; }
+    .clinicCard { background: #ffffff; border-radius: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,.08); transition: background 0.4s; }
+    .highlight { background: #fef3c7 !important; animation: blink 0.6s ease-in-out 4; }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.4;}}
+    /* أزرار الأسهم + إعادة النطق */
+    .arrowBtn  { background: #0288d1; color: white; border-radius: 50%; width: 4rem; height: 4rem; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; transition: background 0.3s; }
+    .arrowBtn:hover { background: #0269a4; }
+    .repeatBtn { background: #0288d1; color: white; border-radius: 50%; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: background 0.3s; }
+    .repeatBtn:hover { background: #0269a4; }
+  </style>
 </head>
 <body class="min-h-screen p-6">
-
-  <h1 class="text-3xl font-bold text-center text-[#004156] mb-6">لوحة التحكم</h1>
 
   <!-- اختيار العيادة + كلمة المرور -->
   <div class="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-xl mb-6 space-y-4">
     <h2 class="text-xl font-bold text-[#004156]">اختر عيادتك</h2>
-
-    <!-- قائمة العيادات -->
     <select id="clinicSelect" class="w-full p-3 border rounded-lg text-lg">
       <option value="" disabled selected>-- اختر عيادة --</option>
     </select>
-
-    <!-- كلمة المرور (تظهر بعد اختيار العيادة) -->
     <input id="passwordInp" type="password" placeholder="كلمة مرور العيادة" class="w-full p-3 border rounded-lg text-lg hidden">
-
-    <!-- زر الدخول -->
     <button id="loginBtn" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 hidden">دخول</button>
-
-    <!-- رسالة خطأ -->
     <p id="errorMsg" class="text-sm text-red-600 text-center hidden"></p>
   </div>
 
@@ -36,9 +36,16 @@
     <h2 id="clinicName" class="text-3xl font-bold text-center text-[#004156]"></h2>
     <p id="clinicNumber" class="text-7xl font-extrabold text-center text-[#2a3e48]"></p>
 
-    <div class="grid grid-cols-2 gap-4">
-      <button id="adv" class="py-3 px-6 bg-blue-700 text-white rounded-lg hover:bg-blue-800">تقدم</button>
-      <button id="back" class="py-3 px-6 bg-gray-700 text-white rounded-lg hover:bg-gray-800">رجوع</button>
+    <!-- أزرار التحكم (أسهم + إعادة النطق) -->
+    <div class="flex items-center justify-center gap-4">
+      <!-- سهم رجوع -->
+      <button id="back" class="arrowBtn" title="رجوع">←</button>
+
+      <!-- زر إعادة النطق -->
+      <button id="repeat" class="repeatBtn" title="إعادة النطق">🔊</button>
+
+      <!-- سهم تقدم -->
+      <button id="adv" class="arrowBtn" title="تقدم">→</button>
     </div>
 
     <div class="flex gap-2">
@@ -50,9 +57,6 @@
 
     <p id="statusMsg" class="text-sm text-gray-600 text-center"></p>
   </div>
-
-  <!-- عنصر تحكم السرعة -->
-  <div id="controlSpeed" class="max-w-2xl mx-auto mt-6 hidden"></div>
 
   <script type="module">
     import { db, ref, get, update, onValue } from "./js/firebase-config.js";
@@ -100,7 +104,7 @@
       document.querySelector('.max-w-2xl.mx-auto.bg-white.p-6.rounded-2xl.shadow-xl.mb-6').classList.add('hidden');
       controlPanel.classList.remove('hidden');
       buildSpeedControl();
-      listenToClinic(); // استماع لحقل currentNumber فقط
+      listenToClinic();
     });
 
     /* ---------- استماع لحقل currentNumber فقط (للعيادة المختارة) ---------- */
@@ -111,7 +115,7 @@
       });
     }
 
-    /* ---------- أزرار التحكم فى الرقم ---------- */
+    /* ---------- أزرار التحكم فى الرقم + إعادة النطق ---------- */
     const api = {
       advanceNumber: async () => {
         const nn = (currentClinic.currentNumber || 0) + 1;
@@ -136,62 +140,69 @@
       }
     };
 
-    /* ---------- أزرار التحكم + إدخال اسم العميل + تسجيل صوتي ---------- */
-    const clientInp   = document.getElementById('clientName');
-    const sendBtn     = document.getElementById('sendBtn');
-    const micBtn      = document.getElementById('micBtn');
-    const statusMsg   = document.getElementById('statusMsg');
-
-    // أزرار التحكم
+    /* ---------- أزرار التحكم + إعادة النطق ---------- */
     document.getElementById('adv').addEventListener('click', async () => {
       await api.advanceNumber();
       announce(currentClinic.name, currentClinic.currentNumber);
     });
+
     document.getElementById('back').addEventListener('click', async () => {
       await api.goBackNumber();
       announce(currentClinic.name, currentClinic.currentNumber);
     });
+
+    document.getElementById('repeat').addEventListener('click', () => {
+      // إعادة نطق الرقم الحالي فقط (بدون الجملة الكاملة)
+      speak(currentClinic.currentNumber.toString());
+    });
+
     document.getElementById('setBtn').addEventListener('click', async () => {
       const v = document.getElementById('setInp').value;
       if (v !== '') { await api.setNumber(v); document.getElementById('setInp').value = ''; }
     });
+
     document.getElementById('reset').addEventListener('click', async () => {
       await api.resetNumber();
       announce(currentClinic.name, currentClinic.currentNumber);
     });
 
-    // إرسال اسم العميل
-    sendBtn.addEventListener('click', () => {
-      const name = clientInp.value.trim();
-      if (!name) { statusMsg.textContent = 'أدخل اسم العميل أولاً'; return; }
-      set(ref(db, 'currentClient'), { name: name, clinic: currentClinic.name, timestamp: Date.now() });
-      statusMsg.textContent = 'تم الإرسال وعرضه على الشاشة';
-      clientInp.value = '';
-    });
+    /* ---------- مشغل متسلسل (فيديو + صور) من مجلد media/ على GitHub ---------- */
+    const mediaBase = 'https://raw.githubusercontent.com/ledooooo/queue/main/media/'; // غيّرها لرابطك
+    // أو لو على نفس السيرفر: const mediaBase = './media/';
 
-    // تسجيل صوتي
-    let mediaRecorder;
-    let audioChunks = [];
-    micBtn.addEventListener('click', async () => {
-      if (!navigator.mediaDevices) { statusMsg.textContent = 'المتصفح لا يدعم الميكروفون'; return; }
-      statusMsg.textContent = 'جاري التسجيل... اضغط مرة أخرى للإيقاف';
-      if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); return; }
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-      audioChunks = [];
-      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const url = URL.createObjectURL(audioBlob);
-        set(ref(db, 'currentClient'), { audioURL: url, clinic: currentClinic.name, timestamp: Date.now() });
-        statusMsg.textContent = 'تم التسجيل وإرساله';
-        stream.getTracks().forEach(t => t.stop());
-      };
-      mediaRecorder.start();
-    });
+    const playlist = [
+      '1.mp4', '2.jpg', '3.mp4', '4.png' // اكتب أسماء ملفاتك بالترتيب هنا
+    ];
 
-    /* ---------- عنصر تحكم السرعة ---------- */
-    buildSpeedControl();
+    let current = 0;
+    const player = document.getElementById('seqPlayer');
+    const image  = document.getElementById('seqImage');
+
+    function playNext() {
+      current = (current + 1) % playlist.length;
+      loadMedia();
+    }
+
+    function loadMedia() {
+      const src = mediaBase + playlist[current];
+      const isVideo = /\.(mp4|webm|ogg)$/i.test(playlist[current]);
+
+      if (isVideo) {
+        image.classList.add('hidden');
+        player.classList.remove('hidden');
+        player.src = src;
+        player.play().catch(() => {});
+      } else {
+        player.classList.add('hidden');
+        image.classList.remove('hidden');
+        image.src = src;
+        setTimeout(playNext, 4000);
+      }
+    }
+
+    player.addEventListener('ended', playNext);
+    player.addEventListener('error', playNext);
+    loadMedia();
   </script>
 </body>
 </html>
