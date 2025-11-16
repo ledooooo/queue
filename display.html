@@ -43,6 +43,16 @@
     <section class="rightCol flex flex-col">
       <!-- أعلى: عرض الجملة/الأسماء المنطوقة -->
       <div id="phraseBox" class="w-full p-6 flex items-center justify-center text-center">
+        <!-- أعلى: عرض الجملة + التاريخ والتوقيت -->
+<div id="phraseBox" class="w-full p-6 flex flex-col items-center justify-center text-center gap-2">
+  <!-- صف واحد يحتوى على الجملة والتاريخ/التوقيت -->
+  <div class="flex items-center justify-between w-full">
+    <!-- الجملة (يسار) -->
+    <p id="phraseText" class="font-extrabold text-2xl lg:text-3xl">-- اضغط على أى زر لظهور الجملة --</p>
+    <!-- التاريخ والتوقيت (يمين) -->
+    <div id="dateTime" class="text-sm lg:text-base font-semibold text-[#01579b] whitespace-nowrap"></div>
+  </div>
+</div>
         <p id="phraseText" class="font-extrabold">-- اضغط على أى زر لظهور الجملة --</p>
       </div>
 
@@ -180,4 +190,5 @@
   </script>
 </body>
 </html>
+
 
