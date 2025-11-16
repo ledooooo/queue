@@ -28,16 +28,13 @@
     <!-- عنوان الصفحة -->
     <h1 class="text-4xl font-extrabold text-center text-[#004156]">مركز غرب المطار - لوحة المدير</h1>
 
-    <!-- قسم إضافة/تعديل عيادة -->
+    <!-- قسم إضافة عيادة جديدة -->
     <div class="max-w-4xl mx-auto card p-6 space-y-4">
-      <h2 class="text-2xl font-bold text-[#004156]">إضافة / تعديل عيادة</h2>
+      <h2 class="text-2xl font-bold text-[#004156]">إضافة عيادة جديدة</h2>
       <input id="newClinicName" type="text" placeholder="اسم العيادة" class="w-full p-3 border rounded-lg text-lg">
       <input id="newClinicPassword" type="password" placeholder="كلمة مرور العيادة" class="w-full p-3 border rounded-lg text-lg">
-      <div class="flex gap-3">
-        <button id="addClinicBtn" class="flex-1 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">أضف</button>
-        <button id="saveClinicBtn" class="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 hidden">حفظ التعديل</button>
-      </div>
-      <p id="clinicMsg" class="text-sm text-gray-600 text-center"></p>
+      <button id="addClinicBtn" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800">أضف</button>
+      <p id="addMsg" class="text-sm text-gray-600 text-center"></p>
     </div>
 
     <!-- زر إعادة تعيين جميع العيادات -->
@@ -45,7 +42,7 @@
       <button id="resetAllBtn" class="py-3 px-6 bg-red-600 text-white rounded-lg hover:bg-red-700">إعادة تعيين جميع العيادات</button>
     </div>
 
-    <!-- قائمة العيادات مع التحكم فى الأرقام + إعادة تعيين الاسم والباسورد -->
+    <!-- قائمة العيادات مع حقول التعديل و التحكم -->
     <div class="max-w-4xl mx-auto card p-6 space-y-4">
       <h2 class="text-2xl font-bold text-[#004156]">العيادات الحالية</h2>
       <ul id="clinicsList" class="space-y-4"></ul>
@@ -58,7 +55,7 @@
 
   <script type="module">
     import { db, ref, get, set, update, remove, onValue, push } from "./js/firebase-config.js";
-    import { speak, buildSpeedControl } from "./js/tts.js";
+    import { buildSpeedControl } from "./js/tts.js";
 
     /* ================== متغيرات الصفحة ================== */
     const loginSection   = document.getElementById('loginSection');
@@ -70,11 +67,8 @@
     const newClinicName     = document.getElementById('newClinicName');
     const newClinicPassword = document.getElementById('newClinicPassword');
     const addClinicBtn      = document.getElementById('addClinicBtn');
-    const saveClinicBtn     = document.getElementById('saveClinicBtn');
     const clinicsList       = document.getElementById('clinicsList');
     const resetAllBtn       = document.getElementById('resetAllBtn');
-
-    let editingId = null; // لتتبع العيادة المُعدَّلة
 
     const ADMIN_PASS = 'admin123'; // غيّرها لكلمة مرور الصفحة الخاصة بك
 
@@ -84,7 +78,7 @@
         loginSection.classList.add('hidden');
         mainContent.classList.remove('hidden');
         buildSpeedControl();
-        renderClinics(); // عرض العيادات
+        renderClinics();
       } else {
         loginError.classList.remove('hidden');
       }
@@ -103,7 +97,7 @@
       renderClinics();
     });
 
-    /* ================== عرض العيادات مع التحكم + إعادة تعيين الاسم/الباسورد ================== */
+    /* ================== عرض العيادات مع حقول التعديل و التحكم ================== */
     async function renderClinics() {
       const snap = await get(ref(db, 'clinics'));
       clinicsList.innerHTML = '';
@@ -115,28 +109,47 @@
 
         clinicsList.insertAdjacentHTML('beforeend', `
           <li class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-4 rounded-xl">
-            <!-- اسم العيادة + الباسورد -->
-            <div>
-              <h3 class="text-xl font-bold text-[#2a3e48]">${name}</h3>
-              <p class="text-sm text-gray-600">كلمة المرور: ${password}</p>
+            <!-- اسم العيادة + حقول التعديل -->
+            <div class="flex-1 space-y-2">
+              <input type="text" value="${name}" id="name-${id}" class="w-full p-2 border rounded text-lg font-bold text-[#2a3e48]">
+              <input type="text" value="${password}" id="pass-${id}" class="w-full p-2 border rounded text-sm" placeholder="كلمة المرور">
+              <div class="flex gap-2">
+                <button onclick="updateClinic('${id}')" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">حفظ التعديل</button>
+                <button onclick="deleteClinic('${id}')" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">حذف</button>
+              </div>
             </div>
 
-            <!-- التحكم فى الرقم + إعادة تعيين الرقم + إعادة تعيين الاسم/الباسورد -->
-            <div class="flex items-center gap-3 flex-wrap">
+            <!-- التحكم فى الرقم -->
+            <div class="flex items-center gap-3">
               <span class="text-2xl font-extrabold text-[#004156]">${currentNumber}</span>
               <button onclick="setSpecificNumber('${id}', ${currentNumber})" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">ضبط رقم</button>
-              <button onclick="resetClinic('${id}')" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">إعادة تعيين الرقم</button>
-              <button onclick="resetNamePassword('${id}')" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700">إعادة تعيين الاسم/الباسورد</button>
+              <button onclick="resetClinic('${id}')" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">إعادة تعيين</button>
             </div>
           </li>`);
       });
     }
 
     /* ================== وظائف التحكم ================== */
+    window.updateClinic = async (id) => {
+      const newName = document.getElementById(`name-${id}`).value.trim();
+      const newPass = document.getElementById(`pass-${id}`).value.trim();
+      if (!newName || !newPass) { alert('أكمل الحقول أولاً'); return; }
+      await update(ref(db, `clinics/${id}`), { name: newName, password: newPass });
+      renderClinics();
+    };
+
+    window.deleteClinic = async (id) => {
+      if (!confirm('متأكد من حذف العيادة؟')) return;
+      await remove(ref(db, `clinics/${id}`));
+      renderClinics();
+    };
+
     window.resetClinic = async (id) => {
       if (!confirm('متأكد من إعادة تعيين الرقم؟')) return;
       await update(ref(db, `clinics/${id}`), { currentNumber: 0 });
-      speak('reset'); // ينطق: تمت إعادة التعيين
+      // تنطيق "تمت إعادة التعيين" من ملف reset.mp3
+      const audio = new Audio('audio/reset.mp3');
+      audio.play().catch(() => {});
       renderClinics();
     };
 
@@ -149,13 +162,6 @@
       renderClinics();
     };
 
-    window.resetNamePassword = async (id) => {
-      if (!confirm('متأكد من إعادة تعيين الاسم وكلمة المرور إلى القيم الافتراضية؟')) return;
-      await update(ref(db, `clinics/${id}`), { name: 'عيادة جديدة', password: '1234' });
-      speak('reset'); // ينطق: تمت إعادة التعيين
-      renderClinics();
-    };
-
     /* ================== إعادة تعيين جميع العيادات مرة واحدة ================== */
     resetAllBtn.addEventListener('click', async () => {
       if (!confirm('متأكد من إعادة تعيين جميع الأرقام إلى صفر؟')) return;
@@ -163,7 +169,9 @@
       snap.forEach(async ch => {
         await update(ref(db, `clinics/${ch.key}`), { currentNumber: 0 });
       });
-      speak('reset'); // ينطق: تمت إعادة التعيين
+      // تنطيق "تمت إعادة التعيين" من ملف reset.mp3
+      const audio = new Audio('audio/reset.mp3');
+      audio.play().catch(() => {});
       renderClinics();
     });
 
