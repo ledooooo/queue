@@ -45,7 +45,7 @@
       <button id="resetAllBtn" class="py-3 px-6 bg-red-600 text-white rounded-lg hover:bg-red-700">إعادة تعيين جميع العيادات</button>
     </div>
 
-    <!-- قائمة العيادات مع التحكم فى الأرقام -->
+    <!-- قائمة العيادات مع التحكم فى الأرقام + إعادة تعيين الاسم والباسورد -->
     <div class="max-w-4xl mx-auto card p-6 space-y-4">
       <h2 class="text-2xl font-bold text-[#004156]">العيادات الحالية</h2>
       <ul id="clinicsList" class="space-y-4"></ul>
@@ -58,7 +58,7 @@
 
   <script type="module">
     import { db, ref, get, set, update, remove, onValue, push } from "./js/firebase-config.js";
-    import { buildSpeedControl } from "./js/tts.js";
+    import { speak, buildSpeedControl } from "./js/tts.js";
 
     /* ================== متغيرات الصفحة ================== */
     const loginSection   = document.getElementById('loginSection');
@@ -103,7 +103,7 @@
       renderClinics();
     });
 
-    /* ================== عرض العيادات مع التحكم ================== */
+    /* ================== عرض العيادات مع التحكم + إعادة تعيين الاسم/الباسورد ================== */
     async function renderClinics() {
       const snap = await get(ref(db, 'clinics'));
       clinicsList.innerHTML = '';
@@ -115,17 +115,18 @@
 
         clinicsList.insertAdjacentHTML('beforeend', `
           <li class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-4 rounded-xl">
-            <!-- اسم العيادة -->
+            <!-- اسم العيادة + الباسورد -->
             <div>
               <h3 class="text-xl font-bold text-[#2a3e48]">${name}</h3>
               <p class="text-sm text-gray-600">كلمة المرور: ${password}</p>
             </div>
 
-            <!-- التحكم فى الرقم -->
-            <div class="flex items-center gap-3">
+            <!-- التحكم فى الرقم + إعادة تعيين الرقم + إعادة تعيين الاسم/الباسورد -->
+            <div class="flex items-center gap-3 flex-wrap">
               <span class="text-2xl font-extrabold text-[#004156]">${currentNumber}</span>
               <button onclick="setSpecificNumber('${id}', ${currentNumber})" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">ضبط رقم</button>
-              <button onclick="resetClinic('${id}')" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">إعادة تعيين</button>
+              <button onclick="resetClinic('${id}')" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">إعادة تعيين الرقم</button>
+              <button onclick="resetNamePassword('${id}')" class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700">إعادة تعيين الاسم/الباسورد</button>
             </div>
           </li>`);
       });
@@ -135,6 +136,7 @@
     window.resetClinic = async (id) => {
       if (!confirm('متأكد من إعادة تعيين الرقم؟')) return;
       await update(ref(db, `clinics/${id}`), { currentNumber: 0 });
+      speak('reset'); // ينطق: تمت إعادة التعيين
       renderClinics();
     };
 
@@ -147,6 +149,13 @@
       renderClinics();
     };
 
+    window.resetNamePassword = async (id) => {
+      if (!confirm('متأكد من إعادة تعيين الاسم وكلمة المرور إلى القيم الافتراضية؟')) return;
+      await update(ref(db, `clinics/${id}`), { name: 'عيادة جديدة', password: '1234' });
+      speak('reset'); // ينطق: تمت إعادة التعيين
+      renderClinics();
+    };
+
     /* ================== إعادة تعيين جميع العيادات مرة واحدة ================== */
     resetAllBtn.addEventListener('click', async () => {
       if (!confirm('متأكد من إعادة تعيين جميع الأرقام إلى صفر؟')) return;
@@ -154,6 +163,7 @@
       snap.forEach(async ch => {
         await update(ref(db, `clinics/${ch.key}`), { currentNumber: 0 });
       });
+      speak('reset'); // ينطق: تمت إعادة التعيين
       renderClinics();
     });
 
