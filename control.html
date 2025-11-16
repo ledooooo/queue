@@ -42,7 +42,7 @@
         <span>السابق</span>
       </button>
 
-      <!-- تكرار + شكل -->
+      <!-- تكرار + شكل (يحدث الرقم نفسه فى قاعدة البيانات) -->
       <button id="repeatBtn" class="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
         <span>🔄</span>
         <span>تكرار</span>
@@ -124,7 +124,7 @@
       });
     }
 
-    /* ---------- أزرار التحكم فى الرقم + زر تكرار + زر تعيين + نطق + إعادة تعيين ---------- */
+    /* ---------- وظائف التحكم + منع التكرار المتسارع (Debounce) ---------- */
     const api = {
       advanceNumber: async () => {
         const nn = (currentClinic.currentNumber || 0) + 1;
@@ -141,9 +141,9 @@
       setNumber: async (v) => {
         const n = parseInt(v, 10);
         if (!isNaN(n) && n >= 0) {
-          await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: n });
-          currentClinic.currentNumber = n;
-          announce(currentClinic.name, currentClinic.currentNumber);
+            await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: n });
+            currentClinic.currentNumber = n;
+            announce(currentClinic.name, currentClinic.currentNumber);
         }
       },
       resetNumber: async () => {
@@ -154,11 +154,24 @@
     };
 
     /* ---------- أزرار التحكم + زر تكرار + زر تعيين + نطق + إعادة تعيين ---------- */
-    const clientInp   = document.getElementById('clientName');
+    const clientInp   = document.getElementById('clientInp');
     const sendBtn     = document.getElementById('sendBtn');
     const micBtn      = document.getElementById('micBtn');
     const statusMsg   = document.getElementById('statusMsg');
     const repeatBtn   = document.getElementById('repeatBtn');
+
+    // دالة Debounce (منع التكرار المتسارع)
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
 
     // أزرار التحكم الأساسية
     document.getElementById('adv').addEventListener('click', () => api.advanceNumber());
@@ -166,10 +179,11 @@
     document.getElementById('setBtn').addEventListener('click', () => api.setNumber(document.getElementById('setInp').value));
     document.getElementById('reset').addEventListener('click', () => api.resetNumber());
 
-    // زر تكرار (يعيد نطق الرقم الحالي)
-    repeatBtn.addEventListener('click', () => {
+    // زر تكرار (Debounced لمنع التكرار المتسارع)
+    repeatBtn.addEventListener('click', debounce(() => {
+      // نكرر النطق ونحدث الرقم نفسه فى قاعدة البيانات (يُحدث صفحة العرض)
       announce(currentClinic.name, currentClinic.currentNumber);
-    });
+    }, 600)); // 600 مللى ثانية بين كل ضغطة
 
     // إرسال اسم العميل
     sendBtn.addEventListener('click', () => {
@@ -228,7 +242,6 @@
       const now = new Date();
       const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       const timeStr = now.toLocaleTimeString('ar-EG');
-      // نضيفها فى أعلى الصفحة (يمكنك وضعها أينما تريد)
       if (!document.getElementById('dateTime')) {
         const div = document.createElement('div');
         div.id = 'dateTime';
