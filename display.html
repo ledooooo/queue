@@ -15,19 +15,20 @@
     @media (min-width:1024px){ .clinicNum { font-size: 5rem; } }
     .highlight { background: #fef3c7 !important; animation: blink 0.6s ease-in-out 4; }
     @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.4;}}
-    /* قسم عرض الجملة */
+    /* قسم عرض الجملة + التواقيت */
     #phraseBox { background: #e0f2fe; border-bottom: 4px solid #0288d1; min-height: 20%; }
     #phraseText { font-size: 2.5rem; line-height: 1.2; color: #01579b; word-break: break-word; }
+    #dateTime   { font-size: 1.1rem; color: #0288d1; }
+    #alertTime  { font-size: 1rem;  color: #c62828; }
     /* منطقة الفيديو/الصور المتسلسلة */
     #videoBox  { background: #000; flex: 1; }
   </style>
 </head>
 <body class="overflow-hidden">
 
-  <!-- التقسيم الطولي: يسار 25% + يمين 75% -->
   <div id="mainGrid" class="flex w-full h-full">
 
-    <!-- ========== يسار: العيادات (25%) ========== -->
+    <!-- يسار: العيادات (25%) -->
     <section class="leftCol p-4 overflow-y-auto flex flex-col gap-4" id="clinicsPanel">
       <h1 class="text-3xl lg:text-4xl font-extrabold text-center text-[#004156] mb-4">الرقم الحالي</h1>
       <div id="cards" class="flex flex-col gap-4"></div>
@@ -39,28 +40,21 @@
       </div>
     </section>
 
-    <!-- ========== يمين: أعلى 20% عرض الجملة + أسفل 80% مشغل متسلسل (فيديو + صور) ========== -->
+    <!-- يمين: أعلى 20% عرض الجملة + التواقيت + أسفل 80% مشغل متسلسل -->
     <section class="rightCol flex flex-col">
-      <!-- أعلى: عرض الجملة/الأسماء المنطوقة -->
-      <div id="phraseBox" class="w-full p-6 flex items-center justify-center text-center">
-        <!-- أعلى: عرض الجملة + التاريخ والتوقيت -->
-<div id="phraseBox" class="w-full p-6 flex flex-col items-center justify-center text-center gap-2">
-  <!-- صف واحد يحتوى على الجملة والتاريخ/التوقيت -->
-  <div class="flex items-center justify-between w-full">
-    <!-- الجملة (يسار) -->
-    <p id="phraseText" class="font-extrabold text-2xl lg:text-3xl">-- اضغط على أى زر لظهور الجملة --</p>
-    <!-- التاريخ والتوقيت (يمين) -->
-    <div id="dateTime" class="text-sm lg:text-base font-semibold text-[#01579b] whitespace-nowrap"></div>
-  </div>
-</div>
-        <p id="phraseText" class="font-extrabold">-- اضغط على أى زر لظهور الجملة --</p>
+      <!-- أعلى: عرض الجملة + التواقيت -->
+      <div id="phraseBox" class="w-full p-6 flex flex-col items-center justify-center text-center gap-2">
+        <!-- اسم المكان + تاريخ اليوم + الساعة الحية -->
+        <div id="dateTime" class="font-semibold">جار التحميل...</div>
+        <!-- الجملة المنطوقة -->
+        <p id="phraseText" class="font-extrabold text-2xl lg:text-3xl">-- اضغط على أى زر لظهور الجملة --</p>
+        <!-- توقيت التنبيه (يُحدث مع كل تنبيه) -->
+        <div id="alertTime" class="font-semibold"></div>
       </div>
 
       <!-- أسفل: مشغل متسلسل (فيديو + صور) -->
       <div id="videoBox" class="w-full flex-1 bg-black relative">
-        <!-- فيديو متسلسل -->
         <video id="seqPlayer" class="w-full h-full object-cover" controls muted autoplay></video>
-        <!-- صورة مؤقتة (تُظهر أثناء عرض الصور) -->
         <img id="seqImage" class="w-full h-full object-cover hidden" alt="slide">
       </div>
     </section>
@@ -87,6 +81,7 @@
     /* ---------- عرض العيادات + تمييز الكارت + عرض الجملة + النطق ---------- */
     const container   = document.getElementById('cards');
     const phraseText  = document.getElementById('phraseText');
+    const alertTime   = document.getElementById('alertTime');
     let lastNumbers   = {};
 
     onValue(ref(db, 'clinics'), snap => {
@@ -113,6 +108,9 @@
           setTimeout(() => card.classList.remove('highlight'), 3000);
           const sentence = `على العميل رقم ${currentNumber} التوجه إلى عيادة ${name}`;
           phraseText.textContent = sentence;
+          // عرض توقيت التنبيث (ساعة:دقيقة:ثانية)
+          const now = new Date();
+          alertTime.textContent = `التنبيه: ${now.toLocaleTimeString('ar-EG')}`;
           announce(name, currentNumber);
         }
         lastNumbers[id] = currentNumber;
@@ -133,6 +131,9 @@
       if (val.name && val.clinic) {
         const sentence = `على العميل ${val.name} التوجه إلى عيادة ${val.clinic}`;
         phraseText.textContent = sentence;
+        // توقيت التنبيث
+        const now = new Date();
+        alertTime.textContent = `التنبيه: ${now.toLocaleTimeString('ar-EG')}`;
         announce(val.clinic, 1);
       } else if (val.audioURL) {
         phraseText.textContent = 'جاري تشغيل التسجيل...';
@@ -142,28 +143,8 @@
       }
     });
 
-/* ---------- عرض التاريخ والتوقيت الحيّ بجوار الجملة ---------- */
-function updateDateTime() {
-  const now = new Date();
-  const options = {
-    weekday : 'long',   // اسم اليوم
-    year    : 'numeric',
-    month   : 'long',   // اسم الشهر
-    day     : 'numeric',
-    hour    : '2-digit',
-    minute  : '2-digit',
-    second  : '2-digit'
-  };
-  document.getElementById('dateTime').textContent =
-    now.toLocaleString('ar-EG', options); // تنسيق عربي كامل
-}
-updateDateTime(); // أول تحديث
-setInterval(updateDateTime, 1000); // تحديث كل ثانية
-
-    
-    
     /* ---------- مشغل متسلسل (فيديو + صور) من مجلد media/ على GitHub ---------- */
-    const mediaBase = './media/'; // غيّرها لرابطك
+    const mediaBase = 'https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/media/'; // غيّرها لرابطك
     // أو لو على نفس السيرفر: const mediaBase = './media/';
 
     const playlist = [
@@ -207,9 +188,16 @@ setInterval(updateDateTime, 1000); // تحديث كل ثانية
 
     // بداية التشغيل التلقائى
     loadMedia();
+
+    /* ---------- عرض اسم المكان + تاريخ اليوم + الساعة الحية ---------- */
+    function updateDateTime() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const timeStr = now.toLocaleTimeString('ar-EG');
+      document.getElementById('dateTime').textContent = `مركز غرب المطار - ${dateStr} - ${timeStr}`;
+    }
+    updateDateTime(); // أول تحديث
+    setInterval(updateDateTime, 1000); // تحديث كل ثانية
   </script>
 </body>
 </html>
-
-
-
