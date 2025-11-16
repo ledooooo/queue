@@ -153,8 +153,6 @@
         // 2- ننطق ملف reset.mp3 (بدون جملة العميل)
         const audio = new Audio('audio2/reset.mp3');
         audio.play().catch(() => {});
-        // 3- ننطق الجملة بعد انتهاء الملف (اختياري)
-        audio.onended = () => announce(currentClinic.name, 0);
       }
     };
 
@@ -261,4 +259,5 @@
   </script>
 </body>
 </html>
+
 
