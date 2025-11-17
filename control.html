@@ -150,10 +150,10 @@
         // 1- نعيد الرقم إلى صفر
         await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: 0 });
         currentClinic.currentNumber = 0;
-        // 2- ننطق ملف reset.mp3 (بدون جملة العميل)
+        // 2- ننطق ملف reset.mp3 (بدون جملة العميل) فى الصفحتين
         const audio = new Audio('audio/reset.mp3');
         audio.play().catch(() => {});
-        // 3- اختياري: ننطق الجملة بعد انتهاء الملف
+        // 3- اختياري: ننطق الجملة بعد انتهاء الملف (اختياري)
         audio.onended = () => announce(currentClinic.name, 0);
       }
     };
