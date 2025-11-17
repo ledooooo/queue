@@ -166,22 +166,22 @@
     };
 
     /* ================== إعادة تعيين جميع العيادات مرة واحدة ================== */
-resetAllBtn.addEventListener('click', async () => {
-  if (!confirm('متأكد من إعادة تعيين جميع الأرقام إلى صفر؟')) return;
-  const snap = await get(ref(db, 'clinics'));
-  const updates = {};
-  snap.forEach(ch => { updates[`clinics/${ch.key}/currentNumber`] = 0; });
-  await update(ref(db), updates); // تحديث دفعة واحدة
-  const audio = new Audio('audio/reset.mp3');
-  audio.play().catch(() => {});
-  renderClinics();
-});
+    resetAllBtn.addEventListener('click', async () => {
+      if (!confirm('متأكد من إعادة تعيين جميع الأرقام إلى صفر؟')) return;
+      const snap = await get(ref(db, 'clinics'));
+      // ✅ استخدم forEach مباشرة على الـ Snap لضمان تنفيذ جميع التحديثات
+      snap.forEach(async ch => {
+        await update(ref(db, `clinics/${ch.key}`), { currentNumber: 0 });
+      });
+      // تنطيق "تمت إعادة التعيين" من ملف reset.mp3
+      const audio = new Audio('audio/reset.mp3');
+      audio.play().catch(() => {});
+      renderClinics();
+    });
 
     /* ================== أول تحميل ================== */
     renderClinics();
   </script>
 </body>
 </html>
-
-
 
