@@ -164,17 +164,14 @@
     const repeatBtn   = document.getElementById('repeatBtn');
 
     // دالة Debounce (منع التكرار المتسارع)
-    function debounce(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
-    }
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => { clearTimeout(timeout); func(...args); };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
     // أزرار التحكم الأساسية
     document.getElementById('adv').addEventListener('click', () => api.advanceNumber());
@@ -259,5 +256,6 @@ repeatBtn.addEventListener('click', debounce(async () => {
   </script>
 </body>
 </html>
+
 
 
