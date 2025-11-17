@@ -151,7 +151,7 @@
         await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: 0 });
         currentClinic.currentNumber = 0;
         // 2- ننطق ملف reset.mp3 (بدون جملة العميل)
-const audio = new Audio('file:///storage/emulated/0/Audio/reset.mp3');
+const audio = new Audio('/sdcard/Audio/reset.mp3');
         audio.play().catch(() => {});
       }
     };
@@ -259,5 +259,6 @@ const mediaBase = 'file:///storage/emulated/0/Media/';
   </script>
 </body>
 </html>
+
 
 
