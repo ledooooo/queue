@@ -151,10 +151,8 @@
         await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: 0 });
         currentClinic.currentNumber = 0;
         // 2- ننطق ملف reset.mp3 (بدون جملة العميل)
-        const audio = new Audio('audio/reset.mp3');
+        const audio = new Audio('audio2/reset.mp3');
         audio.play().catch(() => {});
-        // 3- اختياري: ننطق الجملة بعد انتهاء الملف
-        audio.onended = () => announce(currentClinic.name, 0);
       }
     };
 
@@ -184,7 +182,7 @@
     document.getElementById('setBtn').addEventListener('click', () => api.setNumber(document.getElementById('setInp').value));
     document.getElementById('reset').addEventListener('click', () => api.resetNumber());
 
-    // زر تكرار (Debounced لمنع التكرار المتسارع) + يحدث صفحة العرض
+    // زر تكرار (Debounced لمنع التكرار المتسارع) + يحدث الرقم نفسه فى قاعدة البيانات → يحدث صفحة العرض
     repeatBtn.addEventListener('click', debounce(async () => {
       // نكرر النطق ونحدث الرقم نفسه فى قاعدة البيانات (يُحدث صفحة العرض)
       await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: currentClinic.currentNumber });
@@ -261,3 +259,4 @@
   </script>
 </body>
 </html>
+
