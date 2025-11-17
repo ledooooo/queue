@@ -194,7 +194,13 @@ repeatBtn.addEventListener('click', debounce(async () => {
       statusMsg.textContent = 'تم الإرسال وعرضه على الشاشة';
       clientInp.value = '';
     });
-
+setBtn.addEventListener('click', () => {
+  const n = parseInt(document.getElementById('setInp').value, 10);
+  if (isNaN(n) || n < 0) return;
+  update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: n }).then(() => {
+    announce(currentClinic.name, n);
+  });
+});
     // تسجيل صوتي
     let mediaRecorder;
     let audioChunks = [];
@@ -256,6 +262,7 @@ repeatBtn.addEventListener('click', debounce(async () => {
   </script>
 </body>
 </html>
+
 
 
 
