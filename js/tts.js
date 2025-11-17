@@ -1,6 +1,6 @@
 /* ----------  إعدادات عامة (تُقرأ من localStorage)  ---------- */
 const CFG = {
-  dir: 'audio2/',   // غيّره لاحقاً إلى المسار الكامل على التلفاز
+  dir: 'audio/',   // غيّره لاحقاً إلى المسار الكامل على التلفاز
   speed: Number(localStorage.getItem('ttsSpeed') || 1),
   volume: Number(localStorage.getItem('ttsVol') || 1),
   wa: localStorage.getItem('ttsWa') !== '0'
@@ -100,6 +100,7 @@ export function buildSpeedControl(parentId = 'adminSpeed') {
     alert('تم الحفظ – أعد تحميل الصفحة لتطبيق السرعة الجديدة');
   };
 }
+
 
 
 
