@@ -183,11 +183,11 @@
     document.getElementById('reset').addEventListener('click', () => api.resetNumber());
 
     // زر تكرار (Debounced لمنع التكرار المتسارع) + يحدث الرقم نفسه فى قاعدة البيانات → يحدث صفحة العرض
-    repeatBtn.addEventListener('click', debounce(async () => {
-      // نكرر النطق ونحدث الرقم نفسه فى قاعدة البيانات (يُحدث صفحة العرض)
-      await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: currentClinic.currentNumber });
-      announce(currentClinic.name, currentClinic.currentNumber);
-    }, 600)); // 600 مللى ثانية بين كل ضغطة
+repeatBtn.addEventListener('click', debounce(async () => {
+  // نكتب نفس الرقم ليُحدث onValue فى display.html
+  await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: currentClinic.currentNumber });
+  announce(currentClinic.name, currentClinic.currentNumber);
+}, 600)); // 1000 مللى ثانية بين كل ضغطة
 
     // إرسال اسم العميل
     sendBtn.addEventListener('click', () => {
@@ -259,4 +259,5 @@
   </script>
 </body>
 </html>
+
 
