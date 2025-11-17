@@ -220,7 +220,7 @@ const audio = new Audio('/sdcard/Audio/reset.mp3');
     });
 
     /* ---------- مشغل متسلسل (فيديو + صور) ---------- */
-const mediaBase = 'file:///storage/emulated/0/Media/';
+const mediaBase = '/sdcard/Media/';
     const playlist = ['1.mp4', '2.jpg', '3.mp4', '4.png']; // اكتب أسماء ملفاتك
     let current = 0;
     const player = document.getElementById('seqPlayer');
@@ -259,6 +259,7 @@ const mediaBase = 'file:///storage/emulated/0/Media/';
   </script>
 </body>
 </html>
+
 
 
 
