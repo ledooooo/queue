@@ -164,14 +164,17 @@
     const repeatBtn   = document.getElementById('repeatBtn');
 
     // دالة Debounce (منع التكرار المتسارع)
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => { clearTimeout(timeout); func(...args); };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
 
     // أزرار التحكم الأساسية
     document.getElementById('adv').addEventListener('click', () => api.advanceNumber());
@@ -180,11 +183,11 @@ function debounce(func, wait) {
     document.getElementById('reset').addEventListener('click', () => api.resetNumber());
 
     // زر تكرار (Debounced لمنع التكرار المتسارع) + يحدث الرقم نفسه فى قاعدة البيانات → يحدث صفحة العرض
-repeatBtn.addEventListener('click', debounce(async () => {
-  // نكتب نفس الرقم ليُحدث onValue فى display.html
-  await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: currentClinic.currentNumber });
-  announce(currentClinic.name, currentClinic.currentNumber);
-}, 600)); // 1000 مللى ثانية بين كل ضغطة
+    repeatBtn.addEventListener('click', debounce(async () => {
+      // نكرر النطق ونحدث الرقم نفسه فى قاعدة البيانات (يُحدث صفحة العرض)
+      await update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: currentClinic.currentNumber });
+      announce(currentClinic.name, currentClinic.currentNumber);
+    }, 600)); // 600 مللى ثانية بين كل ضغطة
 
     // إرسال اسم العميل
     sendBtn.addEventListener('click', () => {
@@ -194,13 +197,7 @@ repeatBtn.addEventListener('click', debounce(async () => {
       statusMsg.textContent = 'تم الإرسال وعرضه على الشاشة';
       clientInp.value = '';
     });
-setBtn.addEventListener('click', () => {
-  const n = parseInt(document.getElementById('setInp').value, 10);
-  if (isNaN(n) || n < 0) return;
-  update(ref(db, `clinics/${currentClinic.id}`), { currentNumber: n }).then(() => {
-    announce(currentClinic.name, n);
-  });
-});
+
     // تسجيل صوتي
     let mediaRecorder;
     let audioChunks = [];
@@ -262,7 +259,3 @@ setBtn.addEventListener('click', () => {
   </script>
 </body>
 </html>
-
-
-
-
