@@ -160,7 +160,7 @@
       if (!confirm('متأكد من إعادة تعيين الرقم؟')) return;
       await update(ref(db, `clinics/${id}`), { currentNumber: 0 });
       // تنطيق "تمت إعادة التعيين" من ملف reset.mp3
-      const audio = new Audio('audio2/reset.mp3');
+      const audio = new Audio('audio/reset.mp3');
       audio.play().catch(() => {});
       renderClinics();
     };
@@ -174,7 +174,7 @@
         await update(ref(db, `clinics/${ch.key}`), { currentNumber: 0 });
       });
       // تنطيق "تمت إعادة التعيين" من ملف reset.mp3
-      const audio = new Audio('audio2/reset.mp3');
+      const audio = new Audio('audio/reset.mp3');
       audio.play().catch(() => {});
       renderClinics();
     });
@@ -184,3 +184,4 @@
   </script>
 </body>
 </html>
+
