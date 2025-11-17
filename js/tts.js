@@ -1,6 +1,6 @@
 /* ----------  إعدادات عامة (تُقرأ من localStorage)  ---------- */
 const CFG = {
-  dir: '/sdcard/Audio/',   // غيّره لاحقاً إلى المسار الكامل على التلفاز
+  dir: 'file:///sdcard/Audio/',   // غيّره لاحقاً إلى المسار الكامل على التلفاز
   speed: Number(localStorage.getItem('ttsSpeed') || 1),
   volume: Number(localStorage.getItem('ttsVol') || 1),
   wa: localStorage.getItem('ttsWa') !== '0'
